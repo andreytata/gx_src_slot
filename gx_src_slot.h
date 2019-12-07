@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <set>
 
+
+#define RAW_JSON(...) #__VA_ARGS__
+
 namespace gx
 {
 

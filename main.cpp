@@ -16,6 +16,42 @@ int test_static_slot_type()
     return 0;
 }
 
+/// SETTER. Each field, except "__type__" field, contain JSON data,
+/// w/o additional TYPE-INFO. A "__type__" field has value "setter".
+/// SHARED HASHABLE. It is effective when MULTIPLE OBJECTS ANIMATED
+/// FROM SINGLETONED SETTERS LIST. SO EACH OBJECT HAS SELF OWN STEP
+/// (CURRENT POSITION) IN SETTERS LIST. The "__type__" field can't
+/// be changed (because object's instance created from "__type__").
+const char* setter_test = RAW_JSON(
+{"__type__":"__type__"       // this object's type is type_defs
+,"__name__":"um4f_extended"  // this type type_name
+,"__base__":"um4f"           // base type,
+
+,"__defs__":
+{"m_float_buff":"uv1f:4:4"   // uv1f o(size=4*4)
+,"m_quaternion":"uv4f"       // uv4f o(size=1)
+,"m_uint_array":"uint:2"     // uint o[2] = { -1, 34 };
+}
+
+,"__init__":
+{"m_float_buff":[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]  // initial value
+,"m_uint_array":[-1,34]     // => values list
+}
+
+});
+
+/// SOME SLOT ????.
+/// INIT SLOT-TYPE
+/// EXEC SLOT-TYPE->__INIT__(SLOT ????)              // compute type name from SLOT and THIS SLOT TYPE
+///      READ ???? FROM SLOT & DETECT NODE-TYPE
+///      MAKE NODE, SET NODE-TYPE;
+///      EXEC NODE-TYPE->__INIT__(SLOT ????, NODE*)  // compute created NODE's initial values
+/// SWITCH SLOT's MODE TO 'MAIN'
+///
+/// Create dict-like-node, contain std::map<std::string, std::shared_ptr<gx::slot> >
+/// Apply type from __defs__ to each slot in this dict-like-node;
+/// Execute __init__
+
 int test_root_type(const char* type_name )
 {
     qDebug() << "TYPE test, type_name is:" << QString(type_name);

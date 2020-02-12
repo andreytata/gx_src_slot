@@ -1,6 +1,7 @@
 #ifndef GX_SRC_SLOT_H
 #define GX_SRC_SLOT_H
 
+#include <QString>
 #include <QJsonValue>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -215,7 +216,11 @@ struct slot
 
         auto json_work_around = QByteArray("{\"_\":") + QByteArray(json) + QByteArray("}");
 
-        auto json_root_object = QJsonDocument::fromJson( json_work_around, &parse_error );
+        QJsonDocument json_document = QJsonDocument::fromJson( json_work_around, &parse_error );
+
+        auto json_root_object = json_document.object();
+
+
 
         qDebug() << "|><<SLOT>> SET DATA"  << json_work_around;
 

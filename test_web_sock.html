@@ -1,0 +1,287 @@
+<html>
+    <head>
+        <title>BMB EDIT</title>
+        <meta charset="utf-8">
+		<link rel="stylesheet" href="https://codemirror.net/lib/codemirror.css">
+        <link rel="stylesheet" href="https://codemirror.net/theme/3024-day.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/3024-night.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/abcdef.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/ambiance.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/base16-dark.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/bespin.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/base16-light.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/blackboard.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/cobalt.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/colorforth.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/dracula.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/duotone-dark.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/duotone-light.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/eclipse.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/elegant.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/erlang-dark.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/gruvbox-dark.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/hopscotch.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/icecoder.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/isotope.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/lesser-dark.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/liquibyte.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/lucario.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/material.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/mbo.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/mdn-like.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/midnight.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/monokai.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/neat.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/neo.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/night.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/nord.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/oceanic-next.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/panda-syntax.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/paraiso-dark.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/paraiso-light.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/pastel-on-dark.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/railscasts.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/rubyblue.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/seti.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/shadowfox.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/solarized.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/the-matrix.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/tomorrow-night-bright.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/tomorrow-night-eighties.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/ttcn.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/twilight.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/vibrant-ink.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/xq-dark.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/xq-light.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/yeti.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/idea.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/darcula.css">
+		<link rel="stylesheet" href="https://codemirror.net/theme/zenburn.css">
+		<script src="https://codemirror.net/lib/codemirror.js"></script>
+		<script src="https://codemirror.net/mode/javascript/javascript.js"></script>
+		<script src="https://codemirror.net/mode/python/python.js"></script>
+		<script src="https://codemirror.net/addon/selection/active-line.js"></script>
+		<script src="https://codemirror.net/addon/edit/matchbrackets.js"></script>
+		<style>
+			body        { background: #353535; }
+			.CodeMirror { border: 1px solid #777; font-size:16px}
+		</style>
+    </head>
+    <body>
+        <script>
+		//<!code>BMB Remote Test/Edit:</code!>
+/*
+function findSequence(goal) {
+  function find(start, history) {
+    if (start == goal)
+      return history;
+    else if (start > goal)
+      return null;
+    else
+      return find(start + 5, "(" + history + " + 5)") ||
+             find(start * 3, "(" + history + " * 3)");
+    }
+    return find(1, "1");
+}
+*/
+        </script>		
+        <div>
+            <button onClick="initWebSocket();">Connect</button>
+            <button onClick="stopWebSocket();">Disconnect</button>
+            <button onClick="checkSocket();">State</button>
+            <input type="text" id="debugTextArea" style="width:auto;height:auto;"/>
+<select onchange="selectTheme()" id=select>
+    <option selected>default</option>
+    <option>3024-day</option>
+    <option>3024-night</option>
+    <option>abcdef</option>
+    <option>ambiance</option>
+    <option>base16-dark</option>
+    <option>base16-light</option>
+    <option>bespin</option>
+    <option>blackboard</option>
+    <option>cobalt</option>
+    <option>colorforth</option>
+    <option>darcula</option>
+    <option>dracula</option>
+    <option>duotone-dark</option>
+    <option>duotone-light</option>
+    <option>eclipse</option>
+    <option>elegant</option>
+    <option>erlang-dark</option>
+    <option>gruvbox-dark</option>
+    <option>hopscotch</option>
+    <option>icecoder</option>
+    <option>idea</option>
+    <option>isotope</option>
+    <option>lesser-dark</option>
+    <option>liquibyte</option>
+    <option>lucario</option>
+    <option>material</option>
+    <option>mbo</option>
+    <option>mdn-like</option>
+    <option>midnight</option>
+    <option>monokai</option>
+    <option>neat</option>
+    <option>neo</option>
+    <option>night</option>
+    <option>nord</option>
+    <option>oceanic-next</option>
+    <option>panda-syntax</option>
+    <option>paraiso-dark</option>
+    <option>paraiso-light</option>
+    <option>pastel-on-dark</option>
+    <option>railscasts</option>
+    <option>rubyblue</option>
+    <option>seti</option>
+    <option>shadowfox</option>
+    <option>solarized dark</option>
+    <option>solarized light</option>
+    <option>the-matrix</option>
+    <option>tomorrow-night-bright</option>
+    <option>tomorrow-night-eighties</option>
+    <option>ttcn</option>
+    <option>twilight</option>
+    <option>vibrant-ink</option>
+    <option>xq-dark</option>
+    <option>xq-light</option>
+    <option>yeti</option>
+    <option>zenburn</option>
+</select>
+        </div>
+<!--EDIT_01----------------------------------BEGIN------>
+<textarea id="EDIT_01" name="EDIT_01">
+</textarea>
+<!--EDIT-01-->
+<input type="text" id="inputText" onkeydown="if(event.keyCode==13)sendMessage();" style="width:100%;"/>
+<div>
+    <!--button onClick="sendMessage();">Send</button-->
+</div>
+<div name="interface">
+	<button onClick='gx_query("get_interface");'>get_interface</button>
+    <input type="text" id="gx_query" onkeydown='if(event.keyCode==13)gx_query("get_interface");' style="width:60%;"/>
+</div>
+
+    <script type="text/javascript">
+	
+		var debugTextArea = document.getElementById("debugTextArea");
+	
+		function debug(message) {
+		    if( message.startsWith("{") )
+		        EDIT_01.setValue( message );
+			// editArea.setValue( editArea.getValue() + message + "\n" );
+			debugTextArea.value += message + "\n";
+			debugTextArea.scrollTop = debugTextArea.scrollHeight;
+		}
+
+		function sendMessage() {
+			var msg = document.getElementById("inputText").value;
+			if ( websocket != null )
+			{
+				document.getElementById("inputText").value = "";
+				websocket.send( msg );
+				console.log( "string sent :", '"'+msg+'"' );
+			}
+		}
+        
+		function gx_query(msg) {
+			//var msg = document.getElementById("inputText").value;
+			if ( websocket != null )
+			{
+			//	document.getElementById("inputText").value = "";
+				websocket.send( msg );
+				console.log( "string sent :", '"'+msg+'"' );
+			}
+		}
+		
+		var wsUri = "ws://localhost:4680";
+		//var wsUri = "ws://192.168.0.107:4680";
+		var websocket = null;
+
+		function initWebSocket() {
+			try {
+				if (typeof MozWebSocket == 'function')
+					WebSocket = MozWebSocket;
+				if ( websocket && websocket.readyState == 1 )
+					websocket.close();
+				websocket = new WebSocket( wsUri );
+				websocket.onopen = function (evt) {
+					debug("CONNECTED");
+				};
+				websocket.onclose = function (evt) {
+					debug("DISCONNECTED");
+				};
+				websocket.onmessage = function (evt) {
+					console.log( "Message received :", evt.data );
+					debug( evt.data );
+				};
+				websocket.onerror = function (evt) {
+					debug('ERROR: ' + evt.data);
+				};
+			} catch (exception) {
+				debug('ERROR: ' + exception);
+			}
+		}
+
+		function stopWebSocket() {
+			if (websocket)
+				websocket.close();
+		}
+
+		function checkSocket() {
+			if (websocket != null) {
+				var stateStr;
+				switch (websocket.readyState) {
+					case 0: {
+						stateStr = "CONNECTING";
+						break;
+					}
+					case 1: {
+						stateStr = "OPEN";
+						break;
+					}
+					case 2: {
+						stateStr = "CLOSING";
+						break;
+					}
+					case 3: {
+						stateStr = "CLOSED";
+						break;
+					}
+					default: {
+						stateStr = "UNKNOW";
+						break;
+					}
+				}
+				debug("WebSocket state = " + websocket.readyState + " ( " + stateStr + " )");
+			} else {
+				debug("WebSocket is null");
+			}
+        }
+		var EDIT_01 = CodeMirror.fromTextArea(
+									   document.getElementById("EDIT_01"), {
+			lineNumbers: true,
+			styleActiveLine: true,
+			matchBrackets: true
+		});
+		var ssinput = document.getElementById("select");
+		function selectTheme() {
+			var theme = ssinput.options[ssinput.selectedIndex].textContent;
+			EDIT_01.setOption("theme", theme);
+			location.hash = "#" + theme;
+		}
+		var choice = (location.hash && location.hash.slice(1)) ||
+					   (document.location.search &&
+						decodeURIComponent(document.location.search.slice(1)));
+		if (choice) {
+			ssinput.value = choice;
+			EDIT_01.setOption("theme", choice);
+		}
+		CodeMirror.on(window, "hashchange", function() {
+			var theme = location.hash.slice(1);
+			if (theme) { ssinput.value = theme; selectTheme(); }
+		});
+	</script>
+
+    </body>
+</html>

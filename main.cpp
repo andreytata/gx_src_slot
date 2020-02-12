@@ -1,17 +1,96 @@
-#include <QApplication>
-#include <QMainWindow>
+/*
+#include <QtCore/QCoreApplication>
+#include <QtCore/QCommandLineParser>
+#include <QtCore/QCommandLineOption>
+#include "echoserver.h"
 
-#include <gx_src_slot.h>
-
-static gx::slot::href test_static_slot = gx::root::slot_make("heap://static/static_slot");
-
-int test_static_slot_type()
+int main(int argc, char *argv[])
 {
+    QCoreApplication a(argc, argv);
+
+    QCommandLineParser parser;
+    parser.setApplicationDescription("QtWebSockets example: echoserver");
+    parser.addHelpOption();
+
+    QCommandLineOption dbgOption(QStringList() << "d" << "debug",
+            QCoreApplication::translate("main", "Debug output [default: off]."));
+    parser.addOption(dbgOption);
+    QCommandLineOption portOption(QStringList() << "p" << "port",
+            QCoreApplication::translate("main", "Port for echoserver [default: 1234]."),
+            QCoreApplication::translate("main", "port"), QLatin1String("1234"));
+    parser.addOption(portOption);
+    parser.process(a);
+    bool debug = parser.isSet(dbgOption);
+    int port = parser.value(portOption).toInt();
+
+    EchoServer *server = new EchoServer(port, debug);
+    QObject::connect(server, &EchoServer::closed, &a, &QCoreApplication::quit);
+
+    return a.exec();
+}
+*/
+
+#include <iostream>
+
+#include <QApplication>
+#include <QLabel>
+#include <QMainWindow>
+#include <QSurfaceFormat>
+
+#ifndef QT_NO_OPENGL
+#include <gx_src_es20.h>
+#endif
+#include <gx_src_serv.h>
+#include <gx_src_test.h>
+
+#include <gx_src_user.h>
+
+const char* cmd_new = RAW_JSON(
+{      "__type__": "new"                                         // * commands are only "set", "get" and "new"
+,      "__isas__": "heap://name/name/name/prototype_name"        // * path to prototype, from where object cloned
+,    "transform" : [ "um4f", [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] ] // owerride type of the 'attr1', even prototype has one
+,"sample_vector3": [ "uv3f", [1, 2, 3] ]                         // name: [ typename, value ]
+,      "__defs__": [ "defs",
+                { "m_float_buff":"uv1f:4:4"   // uv1f o(size=4*4)
+                , "m_quaternion":"uv4f"       // uv4f o(size=1)
+                , "m_uint_array":"uint:2"     // uint o[2] = { -1, 34 };
+                }]
+});
+
+
+int test_static_slot_type()  // primitive type set_json / get_json
+{
+    static gx::slot::href test_static_slot = gx::root::slot_make("heap://static/static_slot");
+
     gx::root::root_info();  // test_static_slot->"
 
-    auto sp_type = gx::root::type_find("uv3f");
+    auto sp_type = gx::root::type_find("uv2f");
 
-    test_static_slot->set_type(sp_type);
+    const char* error = nullptr;
+
+    error = test_static_slot->set_type( sp_type );
+
+    if(error)
+    {
+        qDebug() << "ERROR:" << test_static_slot->get_path() << "SET TYPE" << sp_type->get_type_name().c_str();
+        qDebug() << "      " << error;
+    }
+
+    error = test_static_slot->set_data( RAW_JSON( [ 1.0, -2, 3.14 ] ) );               // test json list of numbers
+
+//    error = test_static_slot->set_data( RAW_JSON( { "x":11, "y":12 } ) );        // test json dict
+
+//    error = test_static_slot->set_data( RAW_JSON( "Hello ASCII world!" ) );      // test json string
+
+//    error = test_static_slot->set_data( RAW_JSON( "1234567890" ) );              // test json string
+
+    if(error)
+    {
+        qDebug() << "ERROR:" << test_static_slot->get_path();
+        qDebug() << "      " << error;
+    }
+
+    gx::root::show(test_static_slot.get());
 
     return 0;
 }
@@ -111,42 +190,111 @@ int test_root_slot(const char* path)
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-//    QMainWindow wnd;
-//    wnd.show();
 
-    qDebug() << "|>--------- MAIN BEGIN -------------:)";
+    qDebug() << "|>----- MAIN-INIT BEGIN --------------<|";
 
-//    qDebug() << "\ntest_root_slot" << ((0 == test_root_slot("heap://static/static_slot")) ? "SUCCESS\n\n" : "FAILURE\n\n");
-
-//    qDebug() << "\ntest_root_type" << ((0 == test_root_type("uv3f")) ? "SUCCESS\n\n" : "FAILURE\n\n");
-//    qDebug() << "\ntest_root_type" << ((0 == test_root_type("type_name")) ? "SUCCESS\n\n" : "FAILURE\n\n");
-
-test_static_slot_type();
-    qDebug() << "|>--------- MAIN END ----------------:(";
-
-    return 0;
-
-    gx::slot::href temp;
-
-    auto path = "heap://main_loop//test_slot";
-
-    uint hash = gx::root::hash(path);
-
-    // gx::slot::href test_slot
-    gx::root::smap::iterator exists = gx::root::globals().find(hash);
-
-    if( exists == gx::root::globals().end() )
+    gx::slot::href test_fail = test_fail_type("ERROR: sample error description");
+    qDebug() << "|>---- test_FAIL_type ----" << ( test_fail ? "Success" : "Failure !!!" );
+    if ( test_fail )
     {
-        temp = gx::root::slot_make(path, hash);
+        qDebug() << "<*><*><*><*><*><*><*>Test FAIL ";
+        gx::root::show( test_fail.get() );
+    }
+    // gx::slot::href test_fail = gx::root::error("test error object");
+
+    gx::root::show(test_fail.get());
+
+    // return 0;
+
+    gx::slot::href test_qstr = test_qstr_type("heap://tests/test_qstr");
+    qDebug() << "|>---- test_bool_type ----" << ( test_qstr ? "Success" : "Failure !!!" );
+    if ( test_qstr )
+    {
+        qDebug() << "<*><*><*><*><*><*><*>Test qstr ";
+        gx::root::show( test_qstr.get() );
     }
 
-    qDebug() << "|>------------";
+    gx::slot::href test_bool = test_bool_type("heap://tests/test_bool");
+    qDebug() << "|>---- test_bool_type ----" << ( test_bool ? "Success" : "Failure !!!" );
+    if ( test_bool )
+    {
+        qDebug() << "<*><*><*><*><*><*><*>Test bool ";
+        gx::root::show( test_bool.get() );
+    }
+
+    gx::slot::href test_real = test_real_type("heap://tests/test_real");
+    qDebug() << "|>---- test_real_type ----" << ( test_real ? "Success" : "Failure !!!" );
+    if ( test_real )
+    {
+        qDebug() << "<*><*><*><*><*><*><*>Test real ";
+        gx::root::show( test_real.get() );
+    }
+
+    gx::slot::href test_none = test_none_type("heap://tests/test_none");
+    qDebug() << "|>---- test_none_type ----" << ( test_none ? "Success" : "Failure !!!" );
+
+    gx::slot::href test_uv2f = test_uv2f_type("heap://tests/test_uv2f");
+    qDebug() << "|>---- test_uv2f_type ----" << ( test_uv2f ? "Success" : "Failure !!!" );
+
+    gx::slot::href test_uv3f = test_uv3f_type("heap://tests/test_uv3f");
+    qDebug() << "|>---- test_uv3f_type ----" << ( test_uv3f ? "Success" : "Failure !!!" );
+
+    gx::slot::href test_um4f = test_um4f_type("heap://tests/test_um4f");
+    qDebug() << "|>---- test_um4f_type ----" << ( test_um4f ? "Success" : "Failure !!!" );
+
+    gx::slot::href test_dict = test_dict_type("heap://tests/test_dict");
+    qDebug() << "|>---- test_dict_type ----" << ( test_dict ? "Success" : "Failure !!!" );
+
+    gx::slot::href test_list = test_list_type("heap://tests/test_list");
+    qDebug() << "|>---- test_list_type ----" << ( test_list ? "Success" : "Failure !!!" );
+
+    //gx::user root_gxvm( NULL, false );
+
+    gx::slot::href gxvm = gx::user::new_gxvm("/main");
+    qDebug() << "|>---- test_GXVM_type ----" << ( gxvm ? "Success" : "Failure !!!" );
+
+    qDebug() << "|>----- MAIN-LOOP READY --------------<|";
+
     gx::root::root_info();
 
-    qDebug() << "|>MAIN LOOP BEGIN";
-    int result = 0; //app.exec();
+    qDebug() << "|>----- MAIN SURFACE-FORMAT-SETUP ----<|";
 
-    qDebug() << "|>MAIN LOOP END";
+    QSurfaceFormat format;
+
+    format.setDepthBufferSize(24);
+
+    QSurfaceFormat::setDefaultFormat(format);
+
+    qDebug() << "|>----- MAIN APP-NAME-VERSION-SETUP --<|";
+
+    app.setApplicationName("BMB client");
+
+    app.setApplicationVersion("0.2.1");
+
+    qDebug() << "|>----- MAIN GLSL WINDOW CREATE ------<|";
+
+    #ifndef QT_NO_OPENGL
+        gx::es20 gl_widget;  // can be replaced with gx::gap_generated widget
+        gl_widget.show();
+    #else
+        QLabel note("OpenGL Support required");
+        note.show();
+    #endif
+
+    qDebug() << "|>----- MAIN RUN-WEBSOCKET-SERVER -----<|";
+
+    // Create websocket-server to remote Python/WebApp manage 'heap://' contents,
+    // support remote tests and webbrowser based contents introspection
+
+    EchoServer *server = new EchoServer(4680, true);
+
+    QObject::connect(server, &EchoServer::closed, &app, &QCoreApplication::quit);
+
+    qDebug() << "|>----- MAIN-LOOP BEGIN ---------------<|";
+
+    int result = app.exec();
+
+    qDebug() << "|>----- MAIN-LOOP FINAL ---------------<|"; //DONELOOP END";
 
     return result;
 }

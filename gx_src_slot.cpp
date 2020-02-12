@@ -5,11 +5,9 @@
 #include <QHash>
 
 
-QString hex_hash(const uint& number);
+gx::slot::slot()             { qDebug() << "++<< SLOT >>" << gx::root::hex_hash( 0 )          << (void*) this; }
 
-gx::slot::slot()             { qDebug() << "++<< SLOT >>" << hex_hash( 0 )          << (void*) this; }
-
-gx::slot::~slot()            { qDebug() << "--<< SLOT >>" << hex_hash( this->hash ) << (void*) this; }
+gx::slot::~slot()            { qDebug() << "--<< SLOT >>" << gx::root::hex_hash( this->hash ) << (void*) this; }
 
 struct gx::slot::mode::init : gx::slot::mode { void on(gx::slot::mode::proc* __) { __->on(this); } };
 
@@ -30,29 +28,54 @@ gx::slot::mode* gx::slot::mode_free() noexcept { static gx::slot::mode::free __;
 
 struct __globals__
 {
-    static __globals__& get();
+    static __globals__* get();
 
-    gx::root::smap& allocated_slots() noexcept { static gx::root::smap ss; return ss; }
+    gx::root::smap& allocated_slots() noexcept { return mo_allocated_slots; }
 
-    gx::root::gmap& garbaged_slots()  noexcept { static gx::root::gmap ss; return ss; }
+    gx::root::gmap& garbaged_slots()  noexcept { return mo_garbaged_slots; }
 
-    gx::root::tmap& type_objects()    noexcept { static gx::root::tmap ss; return ss; }
+    gx::root::tmap& type_objects()    noexcept { return mo_type_objects; }
+
+    std::shared_ptr<gx::fail_type_object> get_fail_type_object() noexcept
+    {
+        return mo_fail_type_object;
+    }
 
 private:
+
+    gx::root::gmap mo_garbaged_slots;
+
+    gx::root::smap mo_allocated_slots;
+
+    gx::root::tmap mo_type_objects;
+
+    std::shared_ptr<gx::fail_type_object> mo_fail_type_object = std::make_shared<gx::fail_type_object>();
 
     __globals__()  // on first usage
     {
         qDebug() << "++GLOBALS(on first call)";
 
-        ///gx::type* p_type = new gx::uv3f_type_object;
+        // REGISTER all builtin type-objects, except 'fail'
 
-        ///std::shared_ptr<gx::type> sp_type = std::shared_ptr<gx::type>(p_type);
+        __globals__::type_objects()["uv2f"] = std::shared_ptr<gx::type>(new gx::xuv2f_type_object);
 
-        __globals__::type_objects()["uv2f"] = std::shared_ptr<gx::type>(new gx::uv2f_type_object);
+        __globals__::type_objects()["uv3f"] = std::shared_ptr<gx::type>(new gx::xuv3f_type_object);
 
-        __globals__::type_objects()["uv3f"] = std::shared_ptr<gx::type>(new gx::uv3f_type_object);
+        __globals__::type_objects()["um4f"] = std::shared_ptr<gx::type>(new gx::xum4f_type_object);
 
-        __globals__::type_objects()["um4f"] = std::shared_ptr<gx::type>(new gx::um4f_type_object);
+        __globals__::type_objects()["dict"] = std::shared_ptr<gx::type>(new gx::dict_type_object);
+
+        __globals__::type_objects()["none"] = std::shared_ptr<gx::type>(new gx::none_type_object);
+
+        __globals__::type_objects()["real"] = std::shared_ptr<gx::type>(new gx::real_type_object);
+
+        __globals__::type_objects()["bool"] = std::shared_ptr<gx::type>(new gx::bool_type_object);
+
+        __globals__::type_objects()["qstr"] = std::shared_ptr<gx::type>(new gx::qstr_type_object);
+
+        __globals__::type_objects()["list"] = std::shared_ptr<gx::type>(new gx::list_type_object);
+
+        __globals__::type_objects()["gxvm"] = std::shared_ptr<gx::type>(new gx::gxvm_type_object);
     }
 
     ~__globals__() // on exit application
@@ -60,6 +83,14 @@ private:
         qDebug() << "--GLOBALS";
 
         gx::root::root_info();
+
+        for( auto& pair : allocated_slots() )
+        {
+            gx::slot::href slot = pair.second.lock();
+            if( slot )
+            if( slot->sp_node )
+                slot->sp_node->sig_exit(slot.get());
+        }
 
         std::list<uint> garb_list;
 
@@ -75,13 +106,66 @@ private:
     }
 };
 
-__globals__& __globals__::get() { static __globals__ globalsss; return globalsss; }
+__globals__* __globals__::get()
+{
+    static volatile struct destroyer
+    {
+        destroyer():subj(new __globals__){}
+        ~destroyer()
+        {
+            qDebug() << ">>>>>>>>>>>>>CATCH EXIT HERE";
 
-gx::root::smap& gx::root::globals() noexcept { return __globals__::get().allocated_slots(); }
+            auto ggg = gx::root::globals();
 
-gx::root::gmap& gx::root::garbage() noexcept { return __globals__::get().garbaged_slots();  }
+            auto gbg = gx::root::garbage();
 
-gx::root::tmap& gx::root::types()   noexcept { return __globals__::get().type_objects();    }
+            gx::root::root_info();
+
+            delete subj;
+        }
+        __globals__ * subj;
+    } auto_destroyer;
+
+    return auto_destroyer.subj;
+}
+
+gx::root::smap& gx::root::globals() noexcept { return __globals__::get()->allocated_slots(); }
+
+gx::root::gmap& gx::root::garbage() noexcept { return __globals__::get()->garbaged_slots();  }
+
+gx::root::tmap& gx::root::types()   noexcept { return __globals__::get()->type_objects();    }
+
+gx::slot::href  gx::root::error ( const char* error_c_str ) noexcept
+{
+    // TODO:
+    // HERE EASY TO ADD MULTIPLE fail-based types, each fail is some analog of
+    // exception class, depended parsed 'error_s_str' for example:
+    // sp_slot->sp_node = std::shared_ptr<gx::node>(new gx::fail);
+    // sp_slot->sp_node = std::shared_ptr<gx::node>(new gx::fail_set_error);
+    // sp_slot->sp_node = std::shared_ptr<gx::node>(new gx::fail_get_error);
+    // sp_slot->sp_node = std::shared_ptr<gx::node>(new gx::fail_new_error);
+    // e.t.c.
+
+    gx::proc* p_fail = new gx::proc;
+
+    p_fail->mo_error = error_c_str;
+
+    gx::slot::href sp_slot = std::shared_ptr<gx::slot> ( new gx::slot, gx::root::error_slot_free );
+
+    sp_slot->hash = 0;  // unhashable
+
+    sp_slot->mp_mode = gx::slot::mode_main();
+
+    sp_slot->sp_type = __globals__::get()->get_fail_type_object();
+
+    sp_slot->sp_node = std::shared_ptr<gx::node>(p_fail);
+
+    sp_slot->sp_node->sp_type = sp_slot->sp_type;
+
+    sp_slot->sp_type->__init__(sp_slot.get());
+
+    return sp_slot;
+}
 
 
 void gx::root::slot_kill( const uint& hash ) noexcept
@@ -100,7 +184,7 @@ void gx::root::slot_kill( const uint& hash ) noexcept
 }
 
 
-QString hex_hash(const uint& number)
+QString gx::root::hex_hash(const uint& number) noexcept
 {
     const QString _uint_max = QString::number(uint(-1), 16).fill(QString("0")[0]);
 
@@ -136,13 +220,20 @@ void gx::root::root_info()
     for( auto& pair : gx::root::garbage() )
     {
         gx::slot* p_slot = pair.second;
+
+        QString hkey = hex_hash(pair.first);
+
         if( p_slot )
         {
-            qDebug() << " " << hex_hash(pair.first) << hex_hash(p_slot->get_hash()) << QString(p_slot->get_path());
+            QString skey = hex_hash(p_slot->get_hash());
+
+            QString path = QString(p_slot->get_path());
+
+            qDebug() << " " << hkey << skey << path;
         }
         else
         {
-            qDebug() << " " << hex_hash(pair.first) << "NULLPTR IN GARBAGE";
+            qDebug() << " " << hkey << "NULLPTR IN GARBAGE";
         }
     }
 
@@ -172,8 +263,12 @@ uint gx::root::hash(const char* name) noexcept
 
 void gx::slot::on_free() noexcept
 {
-    qDebug() << "=>SLOT at " << (void*) this << path.c_str();
+    qDebug() << "=>SLOT" << (void*) this << "slot::on_free" << path.c_str();
+
+    if( sp_node ) sp_node->sig_free( this );  // signal to self shared node about slot is free
+
     gx::root::garbage()[hash] = this;
+
     gx::root::globals().erase(hash);
 }
 
@@ -186,9 +281,17 @@ gx::slot::mode* gx::root::slot_mode(const char* ) noexcept
 
 void gx::root::slot_free( gx::slot* p_slot )
 {
-    qDebug() << "|>SLOT_FREE" << (void*) p_slot << "SEND on_free()" << p_slot->path.c_str();
+    qDebug() << "|>SLOT" << (void*) p_slot << "call->on_free" << p_slot->path.c_str();
 
     p_slot->on_free();
+}
+
+
+void gx::root::error_slot_free( gx::slot* p_slot )
+{
+    qDebug() << "|>FAIL-SLOT" << (void*) p_slot << "delete" << p_slot->path.c_str();
+
+    delete p_slot;
 }
 
 
@@ -223,7 +326,7 @@ gx::type::href gx::root::type_find(const char *name) noexcept
 
     if( gx::root::types().end() == exists )
     {
-        return gx::root::type_dict(name);
+        return nullptr;  // gx::root::type_dict(name);
     }
 
     return exists->second;
@@ -275,7 +378,7 @@ gx::type::href gx::root::type_dict(const char* name) noexcept
         }
     };
 
-    //!!!TODO FIND EXISTS TYPE OBJECT, ELSE - CREATE USER DEFINED
+    // !!!TODO FIND EXISTS TYPE OBJECT, ELSE - CREATE USER DEFINED
     qDebug() << "TODO: here type object find or create '" << name <<"' " << __FILE__ << __LINE__;
     return nullptr;
 }

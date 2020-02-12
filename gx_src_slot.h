@@ -1,21 +1,36 @@
 #ifndef GX_SRC_SLOT_H
 #define GX_SRC_SLOT_H
 
+#include <QJsonValue>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonDocument>
+
 #include <string>
 #include <memory>
 #include <QDebug>
 #include <unordered_map>
 #include <set>
 
-
 #define RAW_JSON(...) #__VA_ARGS__
 
 namespace gx
 {
+struct gxvm;
 
 struct root; struct slot; struct node; struct type;
 
-struct unfa; struct vtxa; struct prog; struct QObject;
+struct proc; struct list; struct dict; struct none;
+
+struct unfa; struct vtxa;
+
+struct xvtxa;  // abstract vertex attribute
+
+struct xunfa;  // abstract uniform attribute
+
+struct json;  // abstract json-tree leaf object
+
+struct prog;  // abstract glsl program
 
 /// TYPE struct:
 /// Is used as slot-type and as node-type: so 'slot::sp_type' & 'node::sp_type'
@@ -28,9 +43,9 @@ struct type
 {
     using href = std::shared_ptr<gx::type>;
 
-    type()                 { qDebug() << "++TYPE at" << (void*)this; }
+    type()                 {} // qDebug() << "++TYPE at" << (void*)this; }
 
-    virtual ~type()        { qDebug() << "--TYPE at" << (void*)this << (void*)sp_home.get(); }
+    virtual ~type()        {} // qDebug() << "--TYPE at" << (void*)this << (void*)sp_home.get(); }
 
     std::shared_ptr<gx::slot> sp_home;  // type home slot. Node here contain immutable pairs attr_name : attr_type
 
@@ -38,40 +53,89 @@ struct type
     // ability. Base Type has no abilites to handle slot, is only option.
     // type derived from gx::type, can hold some set of slot href or weakref objects.
     // ABSTRACT SLOT'S NODE OPERATIONS
-    virtual void __init__(gx::slot* self)                     noexcept = 0;  // create or share node-derived object
+
+    // type create node in slot, this method must detect c++-type from self-type and slot->path
+    // and create this slot-node, with non-zero slot-node-type
+    virtual const char* __init__(gx::slot* self) noexcept = 0;  // create or share node-derived object
+
+    // this metod called only after slot-node created and this type-object stored as slot-node-type
+    virtual const char* __load__(gx::slot* self, const QJsonValue& data) noexcept;
 
     //    virtual void __copy__(gx::slot* self, gx::slot*)          noexcept = 0;  // make node's copy and install to slot
 //    //  virtual void __move__(gx::slot* self, gx::slot*)      noexcept = 0;  // move field values from node to node
 //    virtual void __isas__(gx::slot* self, gx::slot*)          noexcept = 0;  // share
 //    virtual void __itis__(gx::slot* self, gx::slot*)          noexcept = 0;  // share
-//    virtual void __load__(gx::slot* self, const QJsonObject&) noexcept = 0;  // load node fields from json object
 //    virtual void __save__(gx::slot* self, QJsonObject& )      noexcept = 0;  // save node fields to json object
 //    virtual void __done__(gx::slot* self)                     noexcept = 0;  // finalize
 
-    virtual std::string get_type_name() { return "user_dict"; }
+    virtual std::string get_type_name() const noexcept = 0; // { return "user_dict"; }
 
     virtual std::shared_ptr<gx::slot> get_type_defs() noexcept = 0;
 };
 
-
+/// NODE base class for all gx::prog, gx::unfa, gx::vtxa, gx::dict, gx::list classes
+/// contain lo-level inspect interface, to detect has "node-derived" one or multiple
+/// interfaces from prog, unfa, vtxa, dict or list. Each node-derived class possible
+/// contain dict or list interface, even direct derived from prog, unfa, or vtxa. Is
+/// depend only from gx::type of gx::node-derived object. Slot delegate to node self
+/// life-time signals (NEW & DEL), and self path based signals SET & GET.
 struct node
 {
+    /// NEW & DEL SIGNAL'S REACTION MODIFIED IN NODE-DERIVED STRUCTORS
     node()                 { qDebug() << "++NODE at" << (void*)this << "????"; }
 
     node(const char* name) { qDebug() << "++NODE at" << (void*)this << name; }
 
     virtual ~node()        { qDebug() << "--NODE at" << (void*)this << (void*)sp_type.get(); }
 
+    virtual void sig_free(gx::slot*) noexcept = 0;  // signal to node about lost refs to this slot.
+                                                    // multiple slots can have href to single node.
+
+    virtual void sig_exit(gx::slot*) noexcept = 0;  // signal to node about system exit, multiple
+                                                    // slots can dublicate system exit for single
+                                                    // node. Node must reset all self slot shared
+                                                    // pointers, close files and sockets.
+
+    /// SET SIGNALS ( SLOT-PATH, JSON-VALUE ) MUST RETURN NULLPTR OR ERROR STRING
+    ///
+    /// GET SIGNALS ( SLOT-PATH, JSON-OBJECT, JSON-FIELD-NAME ) DUMP SELF TO JSON-OBJECT[JSON-FIELD-NAME]
+    ///
+
+    virtual const char* set_from_list( const QJsonArray&  ) noexcept = 0;  // { return "unsupported load from 'list'"; }
+
+    virtual const char* set_from_dict( const QJsonObject& ) noexcept = 0;  // { return "unsupported load from 'dict'"; }
+
+    virtual const char* set_from_qstr( const QString&)      noexcept = 0;  // { return "unsupported load from 'qstr'"; }
+
+    virtual const char* set_from_bool( const bool&      )   noexcept = 0;  // { return "unsupported load from 'bool'"; }
+
+    virtual const char* set_from_real( const double&    )   noexcept = 0;  // { return "unsupported load from 'real'"; }
+
+    virtual const char* set_from_null( )                    noexcept = 0;  // { return "unsupported load from 'null'"; }
+
     virtual std::shared_ptr<gx::slot> get_attr(const char*) { return nullptr; }
 
     virtual std::shared_ptr<gx::type> get_type() { return sp_type; }
 
-    virtual gx::unfa* get_unfa() { return nullptr; }  // LO-LEVEL ACCESS FOR GLSL UNIFIRM ATTRIBUTES
+    virtual gx::xunfa* get_xunfa() noexcept = 0;  // LO-LEVEL ACCESS FOR GLSL UNIFIRM ATTRIBUTES
 
-    virtual gx::vtxa* get_vtxa() { return nullptr; }  // LO-LEVEL ACCESS FOR GLSL VERTEX ATTRIBUTES
+    virtual gx::xvtxa* get_xvtxa() noexcept = 0;  // LO-LEVEL ACCESS FOR GLSL VERTEX ATTRIBUTES
 
-    virtual gx::prog* get_prog() { return nullptr; }  // LO-LEVEL ACCESS FOR GLSL SHADER PROGRAM
+    virtual gx::unfa* get_unfa() noexcept = 0;  // LO-LEVEL ACCESS FOR GLSL UNIFIRM ATTRIBUTES
 
+    virtual gx::vtxa* get_vtxa() noexcept = 0;  // LO-LEVEL ACCESS FOR GLSL VERTEX ATTRIBUTES
+
+    virtual gx::prog* get_prog() noexcept = 0;  // LO-LEVEL ACCESS FOR GLSL SHADER PROGRAM
+
+    virtual gx::dict* get_dict() noexcept = 0;  // LO-LEVEL INSPECT, NODE HAS REFS DICT
+
+    virtual gx::list* get_list() noexcept = 0;  // LO-LEVEL INSPECT, NODE HAS HREF LIST
+
+    virtual gx::json* get_json() noexcept = 0;  // LO-LEVEL INSPECT, NODE IS JSON LEAF OBJECT
+
+    virtual gx::proc* get_proc() noexcept = 0;  // LO-LEVEL INSPECT, NODE IS READ-ONLY ERROR INFO
+
+    virtual gx::gxvm* get_gxvm() noexcept = 0;  // LO-LEVEL INSPECT, NODE IS READ-ONLY ERROR INFO
 //
 //  THIS FAST ACCESS DEPRECATED,
 //    virtual gx::defs* get_defs() { return nullptr; }  // LO-LEVEL ACCESS FOR GLSL DRAW
@@ -83,9 +147,12 @@ struct node
 
     friend class gx::root;
 
-protected:
+    friend class gx::slot;
 
     std::shared_ptr<gx::type> sp_type = nullptr;
+
+    gx::slot*                 mp_slot = nullptr;
+
     ///
     /// SP_TYPE is shared pointer to real type. Some type-derived object.
     /// 'node-type' - inited after node created, sometime is 'slot-type',
@@ -132,7 +199,50 @@ struct slot
     //     gx::slot::mode *m = gx::root::slot_mode("path://to/some/slot");  // get slot's mode pointer
     //
 
-    void set_type(gx::type::href& sp_type_object) { sp_type_object->__init__(this); }
+    const char* set_type(gx::type::href& sp_type_object) { return sp_type_object->__init__(this); }
+
+    const char* set_data(const char* json)
+    {
+        if( nullptr == sp_type ) return            "slot-type is unknown";
+
+        if( nullptr == sp_node ) return            "slot has no data-node created";
+
+        if( nullptr == sp_node->sp_type ) return   "load data to node w/o node-type";
+
+        QJsonParseError parse_error;
+
+        QJsonValue json_value;    // default value is json 'null' value;
+
+        auto json_work_around = QByteArray("{\"_\":") + QByteArray(json) + QByteArray("}");
+
+        auto json_root_object = QJsonDocument::fromJson( json_work_around, &parse_error );
+
+        qDebug() << "|><<SLOT>> SET DATA"  << json_work_around;
+
+        if( QJsonParseError::NoError != parse_error.error )
+        {
+            static QString last_error;
+
+            last_error = parse_error.errorString();
+
+            qDebug() << "  <<SLOT>> JSON VALUE ERROR:" << last_error;
+
+            return last_error.toStdString().c_str();
+        }
+
+        json_value = json_root_object["_"];
+
+        qDebug() << "  <<SLOT>> JSON VALUE IS" << json_value;
+
+        const char* error = set_data( json_value );
+
+        return error;
+    }
+
+    const char* set_data(const QJsonValue& json_value)
+    {
+        return sp_node->sp_type->__load__( this, json_value );
+    }
 
     gx::type::href  get_type() noexcept;
 
@@ -233,17 +343,25 @@ struct root
 
     static tmap& types() noexcept;
 
-    static void  root_info();
+    static QString hex_hash(const uint&) noexcept;
+
+    static void root_info();   // print Globals and Garbage bref info
 
     static void slot_kill( const uint& ) noexcept;
 
-    static void  global_close();
+    static void global_close();
+
+    static void show(gx::slot*) noexcept;
 
     static uint hash( const char* ) noexcept;
 
     static void slot_free(gx::slot* p_slot);
 
+    static void error_slot_free( gx::slot* p_slot );
+
     static std::shared_ptr<gx::slot> slot_make( const char* path );
+
+    static std::shared_ptr<gx::slot> error(const char* error_c_str) noexcept;
 
     static gx::slot::mode*           slot_mode( const char* path ) noexcept;
 
@@ -252,6 +370,52 @@ struct root
     static gx::type::href            type_find( const char* name ) noexcept;
 
     static gx::type::href            type_dict( const char* name ) noexcept;
+};
+
+
+struct ebot
+{
+    struct post
+    {   // abstract post tracer-step procedure
+        struct call;  // bot wait (as parent process) self created child-bot
+        struct exit;  // bot query return to self parent process
+        struct wait;  // bot wait next step, continue working
+        struct done;  // bot query delete self later
+        struct stop;  // bot query remove self from task manager
+        struct proc   // bot result visitor
+        {
+            virtual void on(gx::ebot::post::call*) = 0;
+            virtual void on(gx::ebot::post::exit*) = 0;
+            virtual void on(gx::ebot::post::wait*) = 0;
+            virtual void on(gx::ebot::post::done*) = 0;
+            virtual void on(gx::ebot::post::stop*) = 0;
+            virtual ~proc(){}
+        };
+    };  // after tacer
+    ebot()          { qDebug() << "++TRACER" << (void*)this; }
+    virtual ~ebot() { qDebug() << "--TRACER" << (void*)this; }
+    virtual post* step() = 0;  // each step
+    virtual void  blog( const char* ) = 0;
+    std::string mo_blog;
+};
+
+struct import: ebot
+{
+    import(const char* path, const char* json);  // json with pairs "name":[type, default-value?]
+    virtual post* step();
+    virtual~import();
+};
+
+struct setter: ebot
+{
+    setter(const char* path, const char* json);  // json "name":value
+    virtual post* step();
+};
+
+struct getter: ebot
+{
+    getter(const char* path, const char* json);  // json with query "name_to_get":{"sub"*}|[i,*]|"vpath"|"value"
+    virtual post* step();
 };
 
 }

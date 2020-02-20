@@ -2,6 +2,21 @@ import websocket, json, pdb, weakref
 
 from pprint import pprint as pp
 
+class GxRunnable(object):
+    """Minimal par or seq task, state-mashine with minimal machine states set"""
+    finals = { "created", "success", "failure" }
+    states = { "created", "success", "failure", "started" }
+    last_known_state = "created"  # not never started before, possible has no args
+
+    def run(self):
+        pass
+
+    def invalid(self):
+        pass
+
+    def toJson(self):
+        pass
+
 class GxRemote(object):
     """Instance with mutable methods set"""
     ___face___ = {}  # pseudo-methods container

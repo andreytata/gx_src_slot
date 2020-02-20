@@ -28,7 +28,8 @@ SOURCES += \
     gx_src_es20_shgr.cpp \
     gx_src_es20_unfa.cpp \
     gx_src_es20_vtxa.cpp \
-    gx_src_self.cpp
+    gx_src_self.cpp \
+    gx_src_gxvm.cpp
 
 HEADERS += \
     gx_src_es20.h \

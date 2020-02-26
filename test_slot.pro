@@ -30,7 +30,8 @@ SOURCES += \
     gx_src_es20_vtxa.cpp \
     gx_src_self.cpp \
     gx_src_gxvm.cpp \
-    gx_src_gxvm_seq.cpp
+    gx_src_gxvm_seq.cpp \
+    gx_src_gxvm_vip.cpp
 
 HEADERS += \
     gx_src_es20.h \

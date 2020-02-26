@@ -284,38 +284,46 @@ int main(int argc, char *argv[])
     ubj.sig_error();
     ubj.sig_break();
 
-    gx::vip vubj;           qDebug() << "=>VIP created state";
-    vubj.sig_start();
-    vubj.sig_final();
-    vubj.sig_error();
-    vubj.sig_break();
+    gx::vip* vip_sess = new gx::vip;
 
-    vubj.switch_started();  qDebug() << "=>VIP started state";
-    vubj.sig_start();
-    vubj.sig_final();
-    vubj.sig_error();
-    vubj.sig_break();
+    QObject::connect(&app, &QCoreApplication::destroyed, vip_sess, &gx::vip::exit );
 
-    vubj.switch_success();  qDebug() << "=>VIP success state";
-    vubj.sig_start();
-    vubj.sig_final();
-    vubj.sig_error();
-    vubj.sig_break();
+    qDebug() << "=>VIP created state";
 
-    vubj.switch_failure();  qDebug() << "=>VIP failure state";
-    vubj.sig_start();
-    vubj.sig_final();
-    vubj.sig_error();
-    vubj.sig_break();
+    vip_sess->sig_start();
+    vip_sess->sig_final();
+    vip_sess->sig_error();
+    vip_sess->sig_break();
 
-    vubj.switch_invalid();  qDebug() << "=>VIP invalid state";
-    vubj.sig_start();
-    vubj.sig_final();
-    vubj.sig_error();
-    vubj.sig_break();
+    vip_sess->switch_started();  qDebug() << "=>VIP started state";
+    vip_sess->sig_start();
+    vip_sess->sig_final();
+    vip_sess->sig_error();
+    vip_sess->sig_break();
 
-    return 0;
+    vip_sess->switch_success();  qDebug() << "=>VIP success state";
+    vip_sess->sig_start();
+    vip_sess->sig_final();
+    vip_sess->sig_error();
+    vip_sess->sig_break();
 
+    vip_sess->switch_failure();  qDebug() << "=>VIP failure state";
+    vip_sess->sig_start();
+    vip_sess->sig_final();
+    vip_sess->sig_error();
+    vip_sess->sig_break();
+
+    vip_sess->switch_invalid();  qDebug() << "=>VIP invalid state";
+    vip_sess->sig_start();
+    vip_sess->sig_final();
+    vip_sess->sig_error();
+    vip_sess->sig_break();
+
+    vip_sess->new_par("par1");  // create variable with type 'par'
+    vip_sess->new_job("job1" JSON({"key":"value"}) );
+
+
+/*
     qDebug() << "|>----- MAIN-INIT BEGIN --------------<|";
 
     gx::slot::href test_fail = test_fail_type("ERROR: sample error description");
@@ -328,6 +336,7 @@ int main(int argc, char *argv[])
     // gx::slot::href test_fail = gx::root::error("test error object");
 
     gx::root::show(test_fail.get());
+
 
     // return 0;
 
@@ -381,6 +390,8 @@ int main(int argc, char *argv[])
     qDebug() << "|>----- MAIN-LOOP READY --------------<|";
 
     gx::root::root_info();
+
+    */
 
     qDebug() << "|>----- MAIN SURFACE-FORMAT-SETUP ----<|";
 

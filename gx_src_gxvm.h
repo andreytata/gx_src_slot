@@ -343,32 +343,32 @@ public:
 
     virtual ~vip(){}
 
-    virtual gx::co_process::mode* sig_final_on_created() { qDebug()<<"vip sig_final_on_created"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_start_on_created() { qDebug()<<"vip sig_start_on_created"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_break_on_created() { qDebug()<<"vip sig_break_on_created"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_error_on_created() { qDebug()<<"vip sig_error_on_created"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_final_on_created(); // { qDebug()<<"vip sig_final_on_created"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_start_on_created(); // { qDebug()<<"vip sig_start_on_created"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_break_on_created(); // { qDebug()<<"vip sig_break_on_created"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_error_on_created(); // { qDebug()<<"vip sig_error_on_created"; return gx::co_process::get_state(); }
 
-    virtual gx::co_process::mode* sig_final_on_started() { qDebug()<<"vip sig_final_on_started"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_start_on_started() { qDebug()<<"vip sig_start_on_started"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_break_on_started() { qDebug()<<"vip sig_break_on_started"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_error_on_started() { qDebug()<<"vip sig_error_on_started"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_final_on_started(); // { qDebug()<<"vip sig_final_on_started"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_start_on_started(); // { qDebug()<<"vip sig_start_on_started"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_break_on_started(); // { qDebug()<<"vip sig_break_on_started"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_error_on_started(); // { qDebug()<<"vip sig_error_on_started"; return gx::co_process::get_state(); }
 
-    virtual gx::co_process::mode* sig_final_on_invalid() { qDebug()<<"vip sig_final_on_invalid"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_start_on_invalid() { qDebug()<<"vip sig_start_on_invalid"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_break_on_invalid() { qDebug()<<"vip sig_break_on_invalid"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_error_on_invalid() { qDebug()<<"vip sig_error_on_invalid"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_final_on_invalid(); // { qDebug()<<"vip sig_final_on_invalid"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_start_on_invalid(); // { qDebug()<<"vip sig_start_on_invalid"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_break_on_invalid(); // { qDebug()<<"vip sig_break_on_invalid"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_error_on_invalid(); // { qDebug()<<"vip sig_error_on_invalid"; return gx::co_process::get_state(); }
 
-    virtual gx::co_process::mode* sig_final_on_success() { qDebug()<<"vip sig_final_on_success"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_start_on_success() { qDebug()<<"vip sig_start_on_success"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_break_on_success() { qDebug()<<"vip sig_break_on_success"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_error_on_success() { qDebug()<<"vip sig_error_on_success"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_final_on_success(); // { qDebug()<<"vip sig_final_on_success"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_start_on_success(); // { qDebug()<<"vip sig_start_on_success"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_break_on_success(); // { qDebug()<<"vip sig_break_on_success"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_error_on_success(); // { qDebug()<<"vip sig_error_on_success"; return gx::co_process::get_state(); }
 
-    virtual gx::co_process::mode* sig_final_on_failure() { qDebug()<<"vip sig_final_on_failure"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_start_on_failure() { qDebug()<<"vip sig_start_on_failure"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_break_on_failure() { qDebug()<<"vip sig_break_on_failure"; return gx::co_process::get_state(); }
-    virtual gx::co_process::mode* sig_error_on_failure() { qDebug()<<"vip sig_error_on_failure"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_final_on_failure(); // { qDebug()<<"vip sig_final_on_failure"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_start_on_failure(); // { qDebug()<<"vip sig_start_on_failure"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_break_on_failure(); // { qDebug()<<"vip sig_break_on_failure"; return gx::co_process::get_state(); }
+    virtual gx::co_process::mode* sig_error_on_failure(); // { qDebug()<<"vip sig_error_on_failure"; return gx::co_process::get_state(); }
 
-    virtual void set_error(const char* e) { gx::co_process::error = e ; }
+    virtual void set_error(const char* e); // { gx::co_process::error = e ; }
 
     void switch_started(){ gx::co_process::set_started(); }
     void switch_failure(){ gx::co_process::set_failure(); }
@@ -382,10 +382,14 @@ public:
 
 public slots:
 
-    void new_par(const QJsonObject&o) { on_new_par(o); }
-    void new_seq(const QJsonObject&o) { on_new_seq(o); }
-    void new_vip(const QJsonObject&o) { on_new_vip(o); }
-    void new_job(const QJsonObject&o) { on_new_job(o); }
+    void new_par(const QJsonObject&);
+    void new_par(const QString);
+    void new_seq(const QJsonObject&);
+    void new_vip(const QJsonObject&);
+    void new_job(const QJsonObject&);
+    void new_job(const QString);
+
+    void exit();
 };
 
 }

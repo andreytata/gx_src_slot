@@ -45,6 +45,9 @@ int main(int argc, char *argv[])
 
 #include <gx_src_user.h>
 
+#include <gx_src_gxvm.h>
+
+
 const char* cmd_new = RAW_JSON(
 {      "__type__": "new"                                         // * commands are only "set", "get" and "new"
 ,      "__isas__": "heap://name/name/name/prototype_name"        // * path to prototype, from where object cloned
@@ -190,6 +193,128 @@ int test_root_slot(const char* path)
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
+    gx::seq subj;           qDebug() << "=>created state";
+    subj.sig_start();
+    subj.sig_final();
+    subj.sig_error();
+    subj.sig_break();
+
+    subj.switch_started();  qDebug() << "=>started state";
+    subj.sig_start();
+    subj.sig_final();
+    subj.sig_error();
+    subj.sig_break();
+
+    subj.switch_success();  qDebug() << "=>success state";
+    subj.sig_start();
+    subj.sig_final();
+    subj.sig_error();
+    subj.sig_break();
+
+    subj.switch_failure();  qDebug() << "=>failure state";
+    subj.sig_start();
+    subj.sig_final();
+    subj.sig_error();
+    subj.sig_break();
+
+    subj.switch_invalid();  qDebug() << "=>invalid state";
+    subj.sig_start();
+    subj.sig_final();
+    subj.sig_error();
+    subj.sig_break();
+
+    gx::par psubj;           qDebug() << "=>created state";
+    psubj.sig_start();
+    psubj.sig_final();
+    psubj.sig_error();
+    psubj.sig_break();
+
+    psubj.switch_started();  qDebug() << "=>started state";
+    psubj.sig_start();
+    psubj.sig_final();
+    psubj.sig_error();
+    psubj.sig_break();
+
+    psubj.switch_success();  qDebug() << "=>success state";
+    psubj.sig_start();
+    psubj.sig_final();
+    psubj.sig_error();
+    psubj.sig_break();
+
+    psubj.switch_failure();  qDebug() << "=>failure state";
+    psubj.sig_start();
+    psubj.sig_final();
+    psubj.sig_error();
+    psubj.sig_break();
+
+    psubj.switch_invalid();  qDebug() << "=>invalid state";
+    psubj.sig_start();
+    psubj.sig_final();
+    psubj.sig_error();
+    psubj.sig_break();
+
+    gx::job ubj;           qDebug() << "=>JOB created state";
+    ubj.sig_start();
+    ubj.sig_final();
+    ubj.sig_error();
+    ubj.sig_break();
+
+    ubj.switch_started();  qDebug() << "=>JOB started state";
+    ubj.sig_start();
+    ubj.sig_final();
+    ubj.sig_error();
+    ubj.sig_break();
+
+    ubj.switch_success();  qDebug() << "=>JOB success state";
+    ubj.sig_start();
+    ubj.sig_final();
+    ubj.sig_error();
+    ubj.sig_break();
+
+    ubj.switch_failure();  qDebug() << "=>JOB failure state";
+    ubj.sig_start();
+    ubj.sig_final();
+    ubj.sig_error();
+    ubj.sig_break();
+
+    ubj.switch_invalid();  qDebug() << "=>JOB invalid state";
+    ubj.sig_start();
+    ubj.sig_final();
+    ubj.sig_error();
+    ubj.sig_break();
+
+    gx::vip vubj;           qDebug() << "=>VIP created state";
+    vubj.sig_start();
+    vubj.sig_final();
+    vubj.sig_error();
+    vubj.sig_break();
+
+    vubj.switch_started();  qDebug() << "=>VIP started state";
+    vubj.sig_start();
+    vubj.sig_final();
+    vubj.sig_error();
+    vubj.sig_break();
+
+    vubj.switch_success();  qDebug() << "=>VIP success state";
+    vubj.sig_start();
+    vubj.sig_final();
+    vubj.sig_error();
+    vubj.sig_break();
+
+    vubj.switch_failure();  qDebug() << "=>VIP failure state";
+    vubj.sig_start();
+    vubj.sig_final();
+    vubj.sig_error();
+    vubj.sig_break();
+
+    vubj.switch_invalid();  qDebug() << "=>VIP invalid state";
+    vubj.sig_start();
+    vubj.sig_final();
+    vubj.sig_error();
+    vubj.sig_break();
+
+    return 0;
 
     qDebug() << "|>----- MAIN-INIT BEGIN --------------<|";
 

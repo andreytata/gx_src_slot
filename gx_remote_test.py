@@ -32,6 +32,7 @@ class GxRemote(object):
             return object.__getattribute__(self, name)
 
 class GxObj(object):
+
     def query_remote_interface(self, sock, path="."):
         """Is work only if socket connected to gxvm object. Each gxvm based object have
         'get_interface' method. Call this method w/o parameters return json dict object
@@ -47,6 +48,15 @@ class GxObj(object):
         for i in subj:
             setattr(self, i, GxProc(i))
             print("+++ %r" % getattr(self, i) )
+
+    def ls(self, proc_expr = "^[^_][^_].*[^_][^_]$"):
+        proc_re = re.compile(proc_expr)
+        for i in dir(self):
+            if proc_re.match(i):
+                attr = getattr(self, i)
+                if isinstance( attr, GxProc ):
+                    print("method > %s" % i)
+
 
 class GxProc(object):
     """Remote methamethod info"""
@@ -234,10 +244,14 @@ if __name__=='__main__':
 
 #    pp( sess.get_interface()                 )
 #    pp( sess.get_interface(["arg0","arg2"] ) )
-    pp( sess.get_variables()                 )
-    pp( sess.dir()                           )
-    pp( sess.dir( ["arg0","arg2"])           )
-    pp( sess.cd("hello/world")               )
+#    pp( sess.get_variables()                 )
+#    pp( sess.dir()                           )
+#    pp( sess.dir( ["arg0","arg2"])           )
+#    pp( sess.cd("hello/world")               )
 
     #sess.exec()
     pp([i for i in dir(sess.serv) if not re.match("^__.*__$",i)])
+    sess.serv.ls()
+    # sess.query_reconnect_data()
+    # sess.disconnect()
+    # sess.reconnect()

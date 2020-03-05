@@ -319,6 +319,9 @@ int main(int argc, char *argv[])
     vip_sess->sig_error();
     vip_sess->sig_break();
 
+//    vip_sess->gxvm_make("A",JSON({"key":"value"}));  // создать переменную  "make A {"type":"par"}
+//    vip_sess->gxvm_edit("A",JSON({"key":"value"}));  // изменить значения   "edit A {"data":"..."}
+//    vip_sess->gxvm_heap("A",JSON({"key":"value"}));  // опубликовать для других GVM {"path":"..."}
     vip_sess->new_par("par1");  // create variable with type 'par'
     vip_sess->new_job("job1" JSON({"key":"value"}) );
 

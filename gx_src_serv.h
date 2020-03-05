@@ -66,6 +66,27 @@ struct attr
 
 }
 
+
+/// CLASS Interface. Interface-class-instance life time independed from Session-
+/// -class-instance life-time. And connected to concrete Session-class-instance
+/// using slot-path string. Interface-class-instance role is proxy between some
+/// 'gxvm' instance and some Session class like instance. Interface class parse
+/// input delivered by on_text_message/on_binary_message/on_disconnected events,
+/// and accomulate data from connected gx::gxvm-instance before sending data to
+/// self output => connected Session class or any other class with equal slots.
+///
+/// CONSEQUENTLY: Is dublicate gx::job derived gx::vip class. But gx::vip class
+/// has no ability to accomulate logging info, after each command or methods be
+/// executed on gxvm-instance-side. gxvm-command execution change all data in
+/// vm-register-variables. Is may be any value setted by last command, but only
+/// Interface-class-instance or some other connected-to-vm-events-sender has all
+/// knowelege about file or source line generated last commands set. For example,
+/// some vm-error-template pointer setted by last vm-command overwrite previous
+/// pointer value. but all components like 'C' __file__, __line__,  exists at
+/// object called command in this concrete vm-instance. Depend type of this proxy
+/// object errors can be logged, readed or sended to some console or debug file,
+/// but vm-instance has no info about all this additional enviroment variables.
+///
 class Interface: public QObject
 {
     Q_OBJECT
@@ -170,7 +191,19 @@ private:
     std::map<std::string, std::pair<QMetaMethod, QObject*> > mm_self_interface;  // method name => invocation data
 };
 
-
+/// CLASS Session. Session-class-instance created for each incoming connection.
+/// Contain pointer to Interface-class-instance (initially nullptr). Interface-
+/// -class-instance can be created separately from Session-class-instance. And
+/// can be connected to concrete Session-class-instance using slot-path string.
+/// Session class can be extended with traditional network security abilities.
+/// But all data sended from Session-class-instance to Interface-class-instance
+/// are decoded as JSON text or binary object. Session class instance also send
+/// to connected Interface-class-instance signal on self lost connection.
+///
+/// CONSEQUENTLY: minimal
+///    session::get_path(QString) => SLOT-INFO-JSON
+///    session::set_path(QString) => SUCCESS-FAILURE-JSON
+///
 class Session : public QObject
 {
     Q_OBJECT

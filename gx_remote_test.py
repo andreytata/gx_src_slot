@@ -214,6 +214,23 @@ class Gx(object):
         self.sock.send("get_variables")
         return json.loads( self.sock.recv() )
 
+    def get_path(self, path):
+        """return gx::slot's JSON info. If has no slot at 'path', in returned info
+        field "stat" contain "unknown" as state name. (usually has no 'fail' field)"""
+        return {'fail':'Method get_path(str) has no implementation in Gx python class'}
+        
+    def set_path(self, path):
+        """connect gx-server-side-session-instance to gx::slot at 'path'. Return JSON
+        with "fail" field if path not exist or permission denide"""
+        return {'fail':'Method set_path(str) has no implementation in Gx python class'}
+
+    def send(self, **query):
+        """connect gx-server-side-session-instance to gx::slot at 'path'. Return JSON
+        with "fail" field if path not exist or permission denide"""
+        echo = dict(query)
+        echo["fail"] = 'Method send(**query) has no implementation in Gx python class' 
+        return echo
+
     def exec(self):
         self.__exit = False
         while not self.__exit:
@@ -241,6 +258,35 @@ if __name__=='__main__':
     from pprint import pprint as pp
 
     sess = Gx("localhost", 4680)
+
+    # TEST 00 connect to existed GXVM use name.
+    #      00.1 - get_path( path = "heap://test00" ) => JSON with path info data
+    #             """Get info about path at GX side, state, type, name, exists"""
+    #             GET - way to get data fields in json format, 
+    #      00.2 - set_path( path = "heap://test00" ) => JSON with change path result
+    #             """Sess try connect to path, as remote editor"""
+    #             SET - way to change vm state and even type by sending node's data
+    #                   in JSON format.
+
+    r = sess.get_path("heap://test00")  # read 'path' info ( at least get self access rights )
+    pp(r)
+    r = sess.set_path("heap://test00")  # connect to exists or new created VM at 'path'
+    pp(r)
+
+    # creation step by step crete name with href to, (possible hrefs created with appropriate
+    # names inside complex structure) wait all variables (par1) where finished-all-success is
+    # key to enter next (seq1) block with assign each finished to all href created. After all
+    # assigned, wait(par1) and (seq1) section can be deleted. After any set to name in struct
+    # with hrefs, wait and assign sections must be recreated and evaluated. Is not block draw
+    # and other observation processes. Is include non-blocking introspection process at node.
+    r = sess.send (
+        type = "glsl_window",
+        path = "heap://main/glsl",
+        echo = "window_finished event to %s" % id(sess),
+        set = dict ( title = "Hello World", width = 800, height = 600 ),
+        get = dict ( width ="", height="", is_fullscreen="", glsl_version="")
+    )
+    pp(r)
 
 #    pp( sess.get_interface()                 )
 #    pp( sess.get_interface(["arg0","arg2"] ) )

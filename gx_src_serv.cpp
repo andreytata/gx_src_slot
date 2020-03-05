@@ -51,6 +51,7 @@ void Session::on_remote_string(QString message)
       mp_interface->on_remote_string(message, mp_socket);
 }
 
+
 void Session::on_remote_binary(QByteArray message)
 {
 //    QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());

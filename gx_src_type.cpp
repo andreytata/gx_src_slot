@@ -384,6 +384,169 @@ const char* gx::xum4f::set_from_list(const QJsonArray & list) noexcept
     return nullptr;
 }
 
+
+void gx::root::dump(const char* path, QJsonObject& obj) noexcept
+{
+    uint hash = gx::root::hash(path);
+
+    gx::slot::href sp_slot;
+
+    auto exists = gx::root::globals().find(hash);
+
+    if ( gx::root::globals().end() != exists )
+    {
+        sp_slot = exists->second.lock();
+    }
+    else
+    {
+        sp_slot = nullptr;
+    }
+
+    obj["path"] = path;
+
+    gx::root::dump( sp_slot.get(), obj);
+}
+
+
+void gx::root::dump(gx::slot* s, QJsonObject& obj) noexcept
+{
+    if ( nullptr == s )
+    {
+        obj["slot_heap"] = QString::number( uint( (void*)s ) , 16 );
+        return;
+    }
+
+    obj["slot_heap"] = "slot at " + QString::number( uint( (void*)s ) , 16 );
+    obj["slot_path"] = s->path.c_str();
+
+    return;
+
+    if ( nullptr == s->sp_type )
+
+        qDebug() << "  type is nullptr";
+
+    else
+
+        qDebug() << "  type" << (void*)s->sp_type.get() << QString(s->sp_type->get_type_name().c_str());
+
+    qDebug()     << "  node" << (void*)s->sp_node.get();
+
+    if( nullptr == s->sp_node) return;
+
+    gx::node* p_node = s->sp_node.get();
+
+    qDebug() << "    type"   << (void*) p_node->sp_type.get();
+
+    if( p_node->get_xunfa() )
+    {
+        qDebug() << "      xunfa" << (void*) p_node->get_xunfa();
+
+        static struct : gx::xunfa::proc
+        {
+            void on(gx::xuv2f* o)
+            {
+                qDebug() << "        uv2f" << (void*)o << "["
+                << o->buff[0] << ","
+                << o->buff[1] << "]"
+                   ;
+            }
+
+            void on(gx::xuv3f* o)
+            {
+                qDebug() << "        uv3f" << (void*)o << "["
+                << o->buff[0] << ","
+                << o->buff[1] << ","
+                << o->buff[2] << "]"
+                   ;
+            }
+
+            void on(gx::xum4f* o)
+            {
+                qDebug() << "        um4f" << (void*)o << ":";
+
+                qDebug() << "          |"
+                         << o->buff [0] << "," << o->buff [1] << "," << o->buff [2] << "," << o->buff [3] << "|";
+                qDebug() << "          |"
+                         << o->buff [4] << "," << o->buff [5] << "," << o->buff [6] << "," << o->buff [7] << "|";
+                qDebug() << "          |"
+                         << o->buff [8] << "," << o->buff [9] << "," << o->buff[10] << "," << o->buff[11] << "|";
+                qDebug() << "          |"
+                         << o->buff[12] << "," << o->buff[13] << "," << o->buff[14] << "," << o->buff[15] << "|";
+            }
+        }
+        u_show;
+        p_node->get_xunfa()->on(&u_show);
+    }
+
+    // NEXT ADDITIONAL 'VTXA' INTERFACE:
+    // THIS NODE-DERIVED OBJECT CAN BE COMPUTED/LOADED AND SENDED AS OpenGL vertex buffer object
+    // to GPU memory as VERTEX BUFFER OBJECT. BINDED AND USED AS VERTEX-ATTRIBUTE GLSL VARIABLE.
+    if ( p_node->get_xvtxa() )
+    {
+        qDebug() << "   xvtxa" << (void*) p_node->get_xvtxa();
+    }
+
+    if ( p_node->get_vtxa() )
+    {
+        qDebug() << "    vtxa" << (void*) p_node->get_vtxa();
+    }
+
+    if ( p_node->get_unfa() )
+    {
+        qDebug() << "    unfa" << (void*) p_node->get_unfa();
+    }
+
+    // NEXT ADDITIONAL 'PROG' INTERFACE:
+    // THIS NODE-DERIVED OBJECT CAN BE COMPILED AS GLSL PROGRAM, LINKED, AND BINDED.
+    // AFTER COMPILE OBJECT CAN INIT SELF OWN VARIABLES DICT ( DICT INTERFACE SUPPORTED )
+    if ( p_node->get_prog() )
+    {
+        qDebug() << "    prog" << (void*) p_node->get_prog();
+    }
+
+    // NEXT ADDITIONAL 'DICT' INTERFACE
+    if ( p_node->get_dict() )
+    {
+        qDebug() << "    dict" << (void*) p_node->get_dict();
+    }
+
+    // NEXT ADDITIONAL 'LIST' INTERFACE
+    if ( p_node->get_list() )
+    {
+        qDebug() << "    list" << (void*) p_node->get_list();
+    }
+
+    if ( p_node->get_json() )
+    {
+        qDebug() << "    json" << (void*) p_node->get_json();
+
+        static struct : gx::json::proc
+        {
+            void on(gx::none*o) { qDebug() << "      none" << (void*)o;
+                                }
+            void on(gx::real*o) { qDebug() << "      real" << (void*)o <<  o->get_real(); }
+
+            void on(gx::qstr*o) { qDebug() << "      qstr" << (void*)o << *o->get_qstr(); }
+
+            void on(gx::Bool*o) { qDebug() << "      bool" << (void*)o <<  o->get_bool(); }
+        }
+        separator;
+
+        p_node->get_json()->on(&separator);
+    }
+
+    if ( p_node->get_proc() )
+    {
+        qDebug() << "    fail" << QString(p_node->get_proc()->mo_error.c_str());
+
+        if( p_node->get_proc()->mo_path.size() )
+        {
+            qDebug() << "    path" << QString(p_node->get_proc()->mo_path.c_str());
+        }
+    }
+}
+
+
 void gx::root::show(gx::slot* s)  noexcept
 {
     if ( nullptr == s )

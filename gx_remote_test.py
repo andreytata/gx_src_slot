@@ -227,9 +227,22 @@ class Gx(object):
     def send(self, **query):
         """connect gx-server-side-session-instance to gx::slot at 'path'. Return JSON
         with "fail" field if path not exist or permission denide"""
-        echo = dict(query)
-        echo["fail"] = 'Method send(**query) has no implementation in Gx python class' 
-        return echo
+        self.sock.send(json.dumps(query))
+        return json.loads(self.sock.recv())
+
+    def query_doc():
+        return """
+        Each query is some call to Interface's meta-method. First query interpretation
+        step  evaluated in server-side session instance. Text message decoded as JSON
+        object. If some error, session object append error string template to output
+        JSON 'fail' field and send back this error message to session socket.
+        { 'meta' = 'get'            # method name
+        , 'args' = { "re" : ".*" }  # input
+        }
+        """ 
+        # echo = dict(query)
+        # echo["fail"] = 'Method send(**query) has no implementation in Gx python class' 
+        # return echo
 
     def exec(self):
         self.__exit = False
@@ -257,7 +270,9 @@ if __name__=='__main__':
 
     from pprint import pprint as pp
 
-    sess = Gx("localhost", 4680)
+    # host = "192.168.0.100"
+    host = "127.0.0.1"
+    sess = Gx(host, 4680)
 
     # TEST 00 connect to existed GXVM use name.
     #      00.1 - get_path( path = "heap://test00" ) => JSON with path info data
@@ -280,6 +295,20 @@ if __name__=='__main__':
     # with hrefs, wait and assign sections must be recreated and evaluated. Is not block draw
     # and other observation processes. Is include non-blocking introspection process at node.
     r = sess.send (
+        type = "seq",
+        main = dict (
+            type = "run",
+            proc = "find_or_new",   # void find_or_new(const QJsonObject& i, QJsonObject& o)
+            args = dict ( type = "glsl_window", path = "heap://main/glsl" ),
+            success = "window_success %s" % id(sess),
+            failure = "window_failure %s" % id(sess),
+        ),
+        on_success = dict ( type = "set", title = "Hello World", width = 800, height = 600 ),
+        on_failure = dict ( type = "get", width ="", height="", is_fullscreen="", glsl_version="" ),
+    )
+    pp(r)
+
+    r = sess.send (
         type = "glsl_window",
         path = "heap://main/glsl",
         echo = "window_finished event to %s" % id(sess),
@@ -301,3 +330,22 @@ if __name__=='__main__':
     # sess.query_reconnect_data()
     # sess.disconnect()
     # sess.reconnect()
+    r = sess.send (
+        meta = 'get',   # method name
+        args = dict (
+            path = "heap://tests/test_um4f",
+            pathpath = "heap://pathpath2",
+            echo = "breaf"
+        )
+    )
+    pp(r)
+
+    r = sess.send (
+        meta = 'set',   # method name
+        args = dict (
+            path = "heap://tests/test_um4f",
+            pathpath = "heap://pathpath2",
+            echo = "breaf"
+        )
+    )
+    pp(r)

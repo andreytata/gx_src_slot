@@ -134,6 +134,8 @@ public:
 
 public Q_SLOTS:
 
+    void get(const QJsonObject& in , QJsonObject& out);
+
     void on_remote_opened(QWebSocket* socket);
 
     void on_remote_string(QString message, QWebSocket* socket);
@@ -191,6 +193,10 @@ private:
     std::map<std::string, std::pair<QMetaMethod, QObject*> > mm_self_interface;  // method name => invocation data
 };
 
+/// SESS <-1-> Interface <-1-> SLOT
+/// Interface -> proxy & mediator, has on_socket_lost(QWebSocket*)
+/// Interface -> proxy & mediator, has on_socket_repl(QWebSocket*)
+
 /// CLASS Session. Session-class-instance created for each incoming connection.
 /// Contain pointer to Interface-class-instance (initially nullptr). Interface-
 /// -class-instance can be created separately from Session-class-instance. And
@@ -204,6 +210,9 @@ private:
 ///    session::get_path(QString) => SLOT-INFO-JSON
 ///    session::set_path(QString) => SUCCESS-FAILURE-JSON
 ///
+/// SESS send to interface query, and can extract partial or full ansver from
+/// Interface side. But extract is some next session call.
+/// State "Final"JSON echo object
 class Session : public QObject
 {
     Q_OBJECT
@@ -231,6 +240,8 @@ public:
         mp_interface->on_remote_closed(mp_socket);  // query delete delegated to Interface instance
     }
 
+    void inspect_connected();
+
 public Q_SLOTS:
 
     void on_remote_string(QString message);
@@ -241,7 +252,14 @@ private:
 
     bool debug;
 
-    Interface* mp_interface = nullptr;
+    std::map<std::string, std::pair<QMetaMethod, QObject*> > mm_interface;
+    // [name.toStdString()] = std::pair<QMetaMethod, QObject*>(method, this);
+
+    Interface* mp_inspected = (Interface*)(-1);
+    Interface* mp_interface = nullptr;  // mp_interface->on_string_msg(const QString)
+                                        // mp_interface->on_binary_msg(const QByteArray)
+                                        // mp_interface->on_disconnect(this)
+                                        // mp_interface->on_recuperate(this)
 
     QWebSocket* mp_socket = nullptr;
 };

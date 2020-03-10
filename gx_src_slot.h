@@ -356,6 +356,10 @@ struct root
 
     static void global_close();
 
+    static void dump(const char*, QJsonObject&) noexcept;
+
+    static void dump(gx::slot*, QJsonObject&) noexcept;
+
     static void show(gx::slot*) noexcept;
 
     static uint hash( const char* ) noexcept;

@@ -384,6 +384,49 @@ void Interface::set_attribute( QWebSocket *socket, const QString& arguments_line
     }
 }
 
+
+void Interface::get(const QJsonObject& i, QJsonObject& o)
+{
+    QJsonValue v_args = i["args"];
+
+    if( v_args.isUndefined() )
+    {
+        o["fail"] = "Interface::get ERROR: 'args' undefined";
+        return;
+    }
+
+    if( ! v_args.isObject() )
+    {
+        o["fail"] = "Interface::get ERROR: 'args' is not object";
+        return;
+    }
+
+    QJsonObject args = v_args.toObject();
+
+    QJsonValue v_path = args["path"];
+
+    if( v_path.isUndefined() )
+    {
+        o["fail"] = "Interface::get ERROR: args.path undefined";
+        return;
+    }
+
+    if( !v_path.isString() )
+    {
+        o["fail"] = "Interface::get ERROR: args.path is not string";
+        return;
+    }
+
+    QString path = v_path.toString();
+
+    QJsonObject obj;
+    gx::root::dump( path.toStdString().c_str(), obj);  // dump from path to output json
+    o["echo_path"] = path;
+    o["echo_echo"] = "hello";
+    o["echo_dump"] = obj;
+}
+
+
 // command line interpreter, interface contain only methods started from
 // get_
 // set_

@@ -324,9 +324,10 @@ int main(int argc, char *argv[])
 //    vip_sess->gxvm_heap("A",JSON({"key":"value"}));  // опубликовать для других GVM {"path":"..."}
     vip_sess->new_par("par1");  // create variable with type 'par'
     vip_sess->new_job("job1" JSON({"key":"value"}) );
+    QJsonObject obj;
+    gx::root::dump( "heap://test/no_obj_at_this_path", obj);
+    qDebug() << obj;
 
-
-/*
     qDebug() << "|>----- MAIN-INIT BEGIN --------------<|";
 
     gx::slot::href test_fail = test_fail_type("ERROR: sample error description");
@@ -394,7 +395,6 @@ int main(int argc, char *argv[])
 
     gx::root::root_info();
 
-    */
 
     qDebug() << "|>----- MAIN SURFACE-FORMAT-SETUP ----<|";
 

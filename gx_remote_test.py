@@ -272,7 +272,8 @@ if __name__=='__main__':
 
     # host = "192.168.0.100"
     host = "127.0.0.1"
-    sess = Gx(host, 4680)
+    port = 4680
+    sess = Gx(host, port)
 
     # TEST 00 connect to existed GXVM use name.
     #      00.1 - get_path( path = "heap://test00" ) => JSON with path info data
@@ -330,22 +331,58 @@ if __name__=='__main__':
     # sess.query_reconnect_data()
     # sess.disconnect()
     # sess.reconnect()
+
+# SET => Call Interface's slot "set(QJsonObject,QJsonObject&)"
     r = sess.send (
-        meta = 'get',   # method name
+        meta = 'set', 
         args = dict (
             path = "heap://tests/test_um4f",
-            pathpath = "heap://pathpath2",
-            echo = "breaf"
         )
     )
     pp(r)
 
-    r = sess.send (
-        meta = 'set',   # method name
-        args = dict (
-            path = "heap://tests/test_um4f",
-            pathpath = "heap://pathpath2",
-            echo = "breaf"
-        )
-    )
+# DIR => Call Session's or Interface's slot "dir(QJsonObject,QJsonObject&)"
+    r = sess.send ( meta = 'dir', args = dict ( path = "heap://tests/test_um4f" ) )
     pp(r)
+
+# GET => Call Session's or Interface's slot "get(QJsonObject,QJsonObject&)"
+
+    query_template = dict( meta = 'get', args = dict ( path = "" ))
+
+    query_targets = [
+        "heap://tests/test_qstr" , "heap://tests/test_bool" ,
+        "heap://tests/test_real" , "heap://tests/test_none" ,
+        "heap://tests/test_uv2f" , "heap://tests/test_uv3f" ,
+        "heap://tests/test_dict" , "heap://tests/test_list" ,
+        "/main"
+        ]
+
+    for path in query_targets:
+        query = query_template
+        query["args"]["path"] = path
+        r = sess.send( **query )
+        print("\n---TEST--" + path + "----")
+        pp(query)
+        print("GX %s:%s >>>" % (sess.host,sess.port) )
+        pp(r)
+
+# VARS, EDIT, HREF, WREF, SELF
+#     Interface's variables stored in Interface's dict VARS and has life-time
+#   depended from Interface's instance life time and self own life time based
+#   on VARS records:
+#     EDIT(name, path) => open to edit node's value (new/del/replace)
+#     HREF(name, path) => hard ref to shared object w/o some edit abilities
+#     WREF(name, path) => weak ref to shared object w/o some edit abilities
+#     SELF(name)       => hard ref to not-shared self variable with full edit abilities set
+
+# VAR => Call Interface's Variable's Slot "get(QJsonObject,QJsonObject&)"
+    # r = sess.send (
+    #     meta = 'var',       # Interface's method "var(QJsonObject,QJsonObject&)"
+    #     name = 'var_name',  # Interface's varible name
+    #     eval = 'get',       # vars['var_name'] Slot "get(QJsonObject,QJsonObject&)"
+    #     args = dict (
+    #         path = "heap://tests/test_um4f",
+    #         echo = "breaf"
+    #     )
+    # )
+    # pp(r)

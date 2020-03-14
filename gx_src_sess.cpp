@@ -385,6 +385,14 @@ void Interface::set_attribute( QWebSocket *socket, const QString& arguments_line
 }
 
 
+void Interface::set(const QJsonObject& input, QJsonObject& output)
+{
+    output["fail"] = "Interface::set TODO: NOT IMPLEMENTED METHOD YET";
+    output["echo"] = input;
+    return;
+}
+
+
 void Interface::get(const QJsonObject& i, QJsonObject& o)
 {
     QJsonValue v_args = i["args"];

@@ -385,7 +385,7 @@ const char* gx::xum4f::set_from_list(const QJsonArray & list) noexcept
 }
 
 
-void gx::root::dump(const char* path, QJsonObject& obj) noexcept
+void gx::root::dump(const char* path, QJsonObject& output) noexcept
 {
     uint hash = gx::root::hash(path);
 
@@ -402,81 +402,82 @@ void gx::root::dump(const char* path, QJsonObject& obj) noexcept
         sp_slot = nullptr;
     }
 
-    obj["path"] = path;
+    output["path"] = path;
 
-    gx::root::dump( sp_slot.get(), obj);
+    gx::root::dump( sp_slot.get(), output);
 }
 
 
-void gx::root::dump(gx::slot* s, QJsonObject& obj) noexcept
+void gx::root::dump(gx::slot* s, QJsonObject& output) noexcept
 {
     if ( nullptr == s )
     {
-        obj["slot_heap"] = QString::number( uint( (void*)s ) , 16 );
+        output["slot.heap"] = QString::number( uint( (void*)s ) , 16 );
         return;
     }
 
-    obj["slot_heap"] = "slot at " + QString::number( uint( (void*)s ) , 16 );
-    obj["slot_path"] = s->path.c_str();
+    output["slot.heap"] = "slot at " + QString::number( uint( (void*)s ) , 16 );
 
-    return;
+    output["slot.path"] = s->path.c_str();
 
-    if ( nullptr == s->sp_type )
+    output["slot.type"] =
+            s->sp_type ? QString(s->sp_type->get_type_name().c_str()) : QString("None");
 
-        qDebug() << "  type is nullptr";
+    output["slot.node"] = "node at " + QString::number( uint ( (void*)s->sp_node.get() ), 16 );
 
-    else
-
-        qDebug() << "  type" << (void*)s->sp_type.get() << QString(s->sp_type->get_type_name().c_str());
-
-    qDebug()     << "  node" << (void*)s->sp_node.get();
-
-    if( nullptr == s->sp_node) return;
+    if( nullptr == s->sp_node)
+        return;
 
     gx::node* p_node = s->sp_node.get();
 
-    qDebug() << "    type"   << (void*) p_node->sp_type.get();
+    output["slot.node.type_ptr"] = QString::number( uint( (void*) p_node->sp_type.get() ) , 16 );
 
     if( p_node->get_xunfa() )
     {
-        qDebug() << "      xunfa" << (void*) p_node->get_xunfa();
-
         static struct : gx::xunfa::proc
         {
             void on(gx::xuv2f* o)
             {
-                qDebug() << "        uv2f" << (void*)o << "["
-                << o->buff[0] << ","
-                << o->buff[1] << "]"
-                   ;
+                QJsonArray buff;
+                buff.push_back(o->buff[0]);
+                buff.push_back(o->buff[1]);
+                (*output)["slot.node.type"] = "uv2f";
+                (*output)["slot.node.data"] = buff;
             }
 
             void on(gx::xuv3f* o)
             {
-                qDebug() << "        uv3f" << (void*)o << "["
-                << o->buff[0] << ","
-                << o->buff[1] << ","
-                << o->buff[2] << "]"
-                   ;
+                QJsonArray buff;
+                buff.push_back(o->buff[0]);
+                buff.push_back(o->buff[1]);
+                buff.push_back(o->buff[2]);
+                (*output)["slot.node.type"] = "uv3f";
+                (*output)["slot.node.data"] = buff;
             }
 
             void on(gx::xum4f* o)
             {
-                qDebug() << "        um4f" << (void*)o << ":";
-
-                qDebug() << "          |"
-                         << o->buff [0] << "," << o->buff [1] << "," << o->buff [2] << "," << o->buff [3] << "|";
-                qDebug() << "          |"
-                         << o->buff [4] << "," << o->buff [5] << "," << o->buff [6] << "," << o->buff [7] << "|";
-                qDebug() << "          |"
-                         << o->buff [8] << "," << o->buff [9] << "," << o->buff[10] << "," << o->buff[11] << "|";
-                qDebug() << "          |"
-                         << o->buff[12] << "," << o->buff[13] << "," << o->buff[14] << "," << o->buff[15] << "|";
+                QJsonArray buff;
+                buff.push_back(o->buff[0]); buff.push_back(o->buff[1]);
+                buff.push_back(o->buff[2]); buff.push_back(o->buff[3]);
+                buff.push_back(o->buff[4]); buff.push_back(o->buff[5]);
+                buff.push_back(o->buff[6]); buff.push_back(o->buff[7]);
+                buff.push_back(o->buff[8]); buff.push_back(o->buff[9]);
+                buff.push_back(o->buff[10]); buff.push_back(o->buff[11]);
+                buff.push_back(o->buff[12]); buff.push_back(o->buff[13]);
+                buff.push_back(o->buff[14]); buff.push_back(o->buff[15]);
+                (*output)["slot.node.type"] = "um4f";
+                (*output)["slot.node.data"] = buff;
             }
+
+            QJsonObject* output;
         }
         u_show;
+        u_show.output = &output;
         p_node->get_xunfa()->on(&u_show);
     }
+
+    return;
 
     // NEXT ADDITIONAL 'VTXA' INTERFACE:
     // THIS NODE-DERIVED OBJECT CAN BE COMPUTED/LOADED AND SENDED AS OpenGL vertex buffer object

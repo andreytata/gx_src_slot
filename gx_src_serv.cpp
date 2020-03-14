@@ -48,8 +48,23 @@ void EchoServer::onNewConnection()
 }
 
 
+void Session::dir(const QJsonObject& input, QJsonObject& output)
+{
+    output["fail"] = "Session::dir TODO: NOT IMPLEMENTED METHOD YET";
+    output["echo"] = input;
+    return;
+}
+
 void Session::inspect_connected()
 {
+    mm_interface.clear();
+
+    int dir_index = this->metaObject()->indexOfMethod("dir(QJsonObject,QJsonObject&)");
+
+    QMetaMethod dir_method = this->metaObject()->method(dir_index);
+
+    mm_interface["dir"] = std::pair<QMetaMethod, QObject*>(dir_method, this);
+
     int methods_count = mp_interface->metaObject()->methodCount();
 
     for( int i = 0; i < methods_count; ++i )
@@ -58,25 +73,12 @@ void Session::inspect_connected()
 
        QString name = method.name();
 
-       //QString allow_template = "^((-_-))\\w+$";
-
-       //QStringList allow { "gxvm_", "new_", "get_", "set_", "del_", "add_" };
-
-       //QString allowed = allow.join("|");
-
-       //QString method_name_expression = allow_template.replace("(-_-)", allowed );
-
-       //QRegExp method_name_parser(method_name_expression);
-
-       int pos = 0;  // int pos = method_name_parser.indexIn(name);
-
-       if ( pos == 0 )
+       if( method.methodSignature().endsWith("(QJsonObject,QJsonObject&)") )
        {
            mm_interface[name.toStdString()] = std::pair<QMetaMethod, QObject*>(method, mp_interface);
        }
     }
-
-    mp_inspected = mp_interface;  // prevent recall
+    mp_inspected = mp_interface;  // prevent rescan
 }
 
 
@@ -97,18 +99,16 @@ void Session::on_remote_string(QString message)
 
                 QString last_error;
 
-                QJsonObject inp, out;
+                QJsonObject input, output;
 
                 if( QJsonParseError::NoError != parse_error.error )
                 {
 
-                    last_error = parse_error.errorString();
+                    last_error = parse_error.errorString();   // qDebug() << "  <<SESS>> input text message are not JSON" << last_error;
 
-                    qDebug() << "  <<SESS>> IS NOT JSON" << last_error;
+                    output["fail"] = QString("SESS: text input not JSON") + last_error;
 
-                    out["fail"] = QString("  <<SESS>> IS NOT JSON") + last_error;
-
-                    QJsonDocument echo(out);
+                    QJsonDocument echo(output);
 
                     mp_socket->sendTextMessage( echo.toJson() );
 
@@ -117,37 +117,37 @@ void Session::on_remote_string(QString message)
 
                 if( ! doc.isObject() )
                 {
-                    out["fail"] = QString("  <<SESS>> query is not some json object");
+                    output["fail"] = QString("SESS: query is not some json object");
 
-                    QJsonDocument echo(out);
+                    QJsonDocument echo(output);
 
                     mp_socket->sendTextMessage( echo.toJson() );
 
                     return;
                 }
 
-                inp = doc.object();
+                input = doc.object();
 
-                QJsonObject::iterator meta = inp.find("meta");
+                QJsonValue meta_val = input["meta"];
 
-                if( meta == inp.end() )
+                // QJsonObject::iterator meta = input.find("meta");
+
+                if( meta_val.isUndefined() )
                 {
-                    out["fail"] = QString("  <<SESS>> query has no field 'meta'");
+                    output["fail"] = QString("SESS: query has no field 'meta'");
 
-                    QJsonDocument echo(out);
+                    QJsonDocument echo(output);
 
                     mp_socket->sendTextMessage( echo.toJson() );
 
                     return;
                 }
-
-                QJsonValue meta_val = meta.value();
 
                 if( ! meta_val.isString() )
                 {
-                    out["fail"] = QString("  <<SESS>> field 'meta' must be string");
+                    output["fail"] = QString("SESS: field 'meta' must be string");
 
-                    QJsonDocument echo(out);
+                    QJsonDocument echo(output);
 
                     mp_socket->sendTextMessage( echo.toJson() );
 
@@ -163,9 +163,9 @@ void Session::on_remote_string(QString message)
 
                 if( method_iter == mm_interface.end() )
                 {
-                    out["fail"] = QString("  <<SESS>> interface has no method '") + meta_name + "'";
+                    output["fail"] = QString("SESS: interface has no method ") + meta_name + "(QJsonObject,QJsonObject&)";
 
-                    QJsonDocument echo(out);
+                    QJsonDocument echo(output);
 
                     mp_socket->sendTextMessage( echo.toJson() );
 
@@ -173,15 +173,31 @@ void Session::on_remote_string(QString message)
                 }
 
                 QMetaMethod method = (*method_iter).second.first;
-                QObject*    object = (*method_iter).second.second;
 
-                qDebug() << "  SESS PREPARE CALL" << method.name() << "WITH" << object;
+                QObject* object    = (*method_iter).second.second;
 
-                method.invoke( object,
-                              Qt::DirectConnection,
-                              Q_ARG(const QJsonObject&, inp),
-                              Q_ARG(QJsonObject&, out)
-                              );
+                qDebug() << "  SESS PREPARE CALL" << method.methodSignature() << object;
+
+                /* Deprecated, because re-scanned only methods ends with ?(QJsonObject,QJsonObject&)
+                if(!method.methodSignature().endsWith("(QJsonObject,QJsonObject&)"))
+                {
+                    output["fail"]
+                            = QString( QString("SESS: slot type error ")
+                            + QString(method.methodSignature())).simplified();
+
+                    QJsonDocument echo(output);
+
+                    mp_socket->sendTextMessage( echo.toJson() );
+
+                    return;
+                }
+                */
+
+                method.invoke (
+                            object, Qt::DirectConnection,
+                            Q_ARG(const QJsonObject&, input  ),
+                            Q_ARG(      QJsonObject&, output )
+                        );
 
                 qDebug() << doc;
 
@@ -191,7 +207,7 @@ void Session::on_remote_string(QString message)
                     qDebug() << name << i.second.first.name() << i.second.second;
                 }
 
-                QJsonDocument echo(out);
+                QJsonDocument echo(output);
 
                 mp_socket->sendTextMessage( echo.toJson() );
 

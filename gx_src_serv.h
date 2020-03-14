@@ -134,7 +134,9 @@ public:
 
 public Q_SLOTS:
 
-    void get(const QJsonObject& in , QJsonObject& out);
+    void get(const QJsonObject& input , QJsonObject& output);
+
+    void set(const QJsonObject& input , QJsonObject& output);
 
     void on_remote_opened(QWebSocket* socket);
 
@@ -247,6 +249,8 @@ public Q_SLOTS:
     void on_remote_string(QString message);
 
     void on_remote_binary(QByteArray message);
+
+    void dir(const QJsonObject&, QJsonObject&);
 
 private:
 

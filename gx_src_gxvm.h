@@ -393,4 +393,7 @@ public slots:
 };
 
 }
+
+
+
 #endif // GX_SRC_GXVM_H

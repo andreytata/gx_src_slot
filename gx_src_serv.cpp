@@ -48,10 +48,36 @@ void EchoServer::onNewConnection()
 }
 
 
-void Session::dir(const QJsonObject& input, QJsonObject& output)
+void Session::cdir(const QJsonObject& input, QJsonObject& output)
 {
-    output["fail"] = "Session::dir TODO: NOT IMPLEMENTED METHOD YET";
-    output["echo"] = input;
+    if( !mp_interface )
+    {
+        output["echo"] = input;
+        output["fail"] = "Session::dir Interface instance not connected";
+        return;
+    }
+
+    if( !mp_socket )
+    {
+        output["echo"] = input;
+        output["fail"] = "Session::dir Session socket is nullptr";
+        return;
+    }
+
+    if( mp_interface != mp_inspected )
+    {
+        inspect_connected();
+    }
+
+    QJsonObject echo;
+
+    for( auto& m : mm_interface )
+    {
+        echo[ m.first.c_str() ] = m.second.first.methodSignature().data();
+    }
+
+    output["echo"] = echo;
+
     return;
 }
 
@@ -59,11 +85,11 @@ void Session::inspect_connected()
 {
     mm_interface.clear();
 
-    int dir_index = this->metaObject()->indexOfMethod("dir(QJsonObject,QJsonObject&)");
+    int dir_index = this->metaObject()->indexOfMethod("cdir(QJsonObject,QJsonObject&)");
 
     QMetaMethod dir_method = this->metaObject()->method(dir_index);
 
-    mm_interface["dir"] = std::pair<QMetaMethod, QObject*>(dir_method, this);
+    mm_interface["cdir"] = std::pair<QMetaMethod, QObject*>(dir_method, this);
 
     int methods_count = mp_interface->metaObject()->methodCount();
 
@@ -91,7 +117,10 @@ void Session::on_remote_string(QString message)
         {
             if (mp_socket)
             {
-                if( mp_interface != mp_inspected ) inspect_connected();
+                if( mp_interface != mp_inspected )
+                {
+                    inspect_connected();
+                }
 
                 QJsonParseError parse_error;
 
@@ -129,8 +158,6 @@ void Session::on_remote_string(QString message)
                 input = doc.object();
 
                 QJsonValue meta_val = input["meta"];
-
-                // QJsonObject::iterator meta = input.find("meta");
 
                 if( meta_val.isUndefined() )
                 {

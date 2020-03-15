@@ -107,7 +107,7 @@ void Interface::build_or_rebuild_interface()
     }
 }
 
-
+/*
 void Interface::new_sock_test(QWebSocket *socket, const QString &arguments_line)
 {
     if( socket )
@@ -118,7 +118,7 @@ void Interface::new_sock_test(QWebSocket *socket, const QString &arguments_line)
         socket->sendTextMessage(QJsonDocument(echo).toJson());
     }
 }
-
+*/
 
 void Interface::set(QJsonObject& echo, const QString& name, const QString& type, const QString& path)
 {
@@ -202,7 +202,7 @@ void Interface::set(QJsonObject& echo, const QString& name, const QString& type,
     react_depend_slot_mode();
 }
 
-
+/*
 void Interface::gxvm_set(QWebSocket *socket, const QString &arguments_line)
 {
     // TODO: is impossible before gxvm detected and connected to this interface
@@ -249,9 +249,9 @@ void Interface::gxvm_set(QWebSocket *socket, const QString &arguments_line)
         }
     }
 }
+*/
 
-
-
+/*
 void Interface::get_shared_vm(QWebSocket *socket, const QString &arguments_line)
 {
     if( socket )
@@ -262,8 +262,9 @@ void Interface::get_shared_vm(QWebSocket *socket, const QString &arguments_line)
         socket->sendTextMessage(QJsonDocument(echo).toJson());
     }
 }
+*/
 
-
+/*
 void Interface::get_interface(QWebSocket* socket, const QString&)
 {
     // send JSON with current interface to socket
@@ -285,9 +286,11 @@ void Interface::get_interface(QWebSocket* socket, const QString&)
         socket->sendTextMessage(QJsonDocument(interface).toJson());
     }
 }
+*/
 
 //void Interface::unknownviewguest invader
 
+/*
 void Interface::add_interface(QWebSocket* socket, const QString& interface_name)
 {
     auto exists = mm_self_interfaces.find(interface_name.toStdString());
@@ -333,7 +336,9 @@ void Interface::add_interface(QWebSocket* socket, const QString& interface_name)
         socket->sendTextMessage(QJsonDocument(echo).toJson());
     }
 }
+*/
 
+/*
 void Interface::del_interface(QWebSocket* socket, const QString& interface_name)
 {
     QJsonObject echo;
@@ -364,8 +369,9 @@ void Interface::del_interface(QWebSocket* socket, const QString& interface_name)
         socket->sendTextMessage(QJsonDocument(echo).toJson());
     }
 }
+*/
 
-
+/*
 void Interface::set_attribute( QWebSocket *socket, const QString& arguments_line )
 {
     // std::string path_std = arguments_line.toStdString();
@@ -383,56 +389,8 @@ void Interface::set_attribute( QWebSocket *socket, const QString& arguments_line
         socket->sendTextMessage(QJsonDocument(echo).toJson());
     }
 }
+*/
 
-
-void Interface::set(const QJsonObject& input, QJsonObject& output)
-{
-    output["fail"] = "Interface::set TODO: NOT IMPLEMENTED METHOD YET";
-    output["echo"] = input;
-    return;
-}
-
-
-void Interface::get(const QJsonObject& i, QJsonObject& o)
-{
-    QJsonValue v_args = i["args"];
-
-    if( v_args.isUndefined() )
-    {
-        o["fail"] = "Interface::get ERROR: 'args' undefined";
-        return;
-    }
-
-    if( ! v_args.isObject() )
-    {
-        o["fail"] = "Interface::get ERROR: 'args' is not object";
-        return;
-    }
-
-    QJsonObject args = v_args.toObject();
-
-    QJsonValue v_path = args["path"];
-
-    if( v_path.isUndefined() )
-    {
-        o["fail"] = "Interface::get ERROR: args.path undefined";
-        return;
-    }
-
-    if( !v_path.isString() )
-    {
-        o["fail"] = "Interface::get ERROR: args.path is not string";
-        return;
-    }
-
-    QString path = v_path.toString();
-
-    QJsonObject obj;
-    gx::root::dump( path.toStdString().c_str(), obj);  // dump from path to output json
-    o["echo_path"] = path;
-    o["echo_echo"] = "hello";
-    o["echo_dump"] = obj;
-}
 
 
 // command line interpreter, interface contain only methods started from

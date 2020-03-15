@@ -31,7 +31,8 @@ SOURCES += \
     gx_src_self.cpp \
     gx_src_gxvm.cpp \
     gx_src_gxvm_seq.cpp \
-    gx_src_gxvm_vip.cpp
+    gx_src_gxvm_vip.cpp \
+    gx_src_face.cpp
 
 HEADERS += \
     gx_src_es20.h \
@@ -42,4 +43,5 @@ HEADERS += \
     gx_src_es20_vtxa.h \
     gx_src_es20_unfa.h \
     gx_src_user.h \
-    gx_src_gxvm.h
+    gx_src_gxvm.h \
+    gx_src_face.h

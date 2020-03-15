@@ -1,4 +1,4 @@
-import websocket, json, pdb, weakref
+import sys, websocket, json, pdb, weakref
 
 from pprint import pprint as pp
 
@@ -180,7 +180,7 @@ class Gx(object):
         self.surl = self.host+ ":%d" % self.port 
         self.sock = websocket.create_connection(self.surl)
         self.serv = GxObj()
-        self.serv.query_remote_interface( self.sock, "." )
+    #    self.serv.query_remote_interface( self.sock, "." )
 
     def dir(self, args=[]):
         """Return info about gx-side session's 'path',
@@ -214,15 +214,16 @@ class Gx(object):
         self.sock.send("get_variables")
         return json.loads( self.sock.recv() )
 
-    def get_path(self, path):
-        """return gx::slot's JSON info. If has no slot at 'path', in returned info
-        field "stat" contain "unknown" as state name. (usually has no 'fail' field)"""
-        return {'fail':'Method get_path(str) has no implementation in Gx python class'}
+    
+    # def get_path(self, path):
+    #     """return gx::slot's JSON info. If has no slot at 'path', in returned info
+    #     field "stat" contain "unknown" as state name. (usually has no 'fail' field)"""
+    #     return {'fail':'Method get_path(str) has no implementation in Gx python class'}
         
-    def set_path(self, path):
-        """connect gx-server-side-session-instance to gx::slot at 'path'. Return JSON
-        with "fail" field if path not exist or permission denide"""
-        return {'fail':'Method set_path(str) has no implementation in Gx python class'}
+    # def set_path(self, path):
+    #     """connect gx-server-side-session-instance to gx::slot at 'path'. Return JSON
+    #     with "fail" field if path not exist or permission denide"""
+    #     return {'fail':'Method set_path(str) has no implementation in Gx python class'}
 
     def send(self, **query):
         """connect gx-server-side-session-instance to gx::slot at 'path'. Return JSON
@@ -284,10 +285,10 @@ if __name__=='__main__':
     #             SET - way to change vm state and even type by sending node's data
     #                   in JSON format.
 
-    r = sess.get_path("heap://test00")  # read 'path' info ( at least get self access rights )
-    pp(r)
-    r = sess.set_path("heap://test00")  # connect to exists or new created VM at 'path'
-    pp(r)
+    # r = sess.get_path("heap://test00")  # read 'path' info ( at least get self access rights )
+    # pp(r)
+    # r = sess.set_path("heap://test00")  # connect to exists or new created VM at 'path'
+    # pp(r)
 
     # creation step by step crete name with href to, (possible hrefs created with appropriate
     # names inside complex structure) wait all variables (par1) where finished-all-success is
@@ -296,6 +297,7 @@ if __name__=='__main__':
     # with hrefs, wait and assign sections must be recreated and evaluated. Is not block draw
     # and other observation processes. Is include non-blocking introspection process at node.
     r = sess.send (
+        meta = "cdir",
         type = "seq",
         main = dict (
             type = "run",
@@ -310,6 +312,7 @@ if __name__=='__main__':
     pp(r)
 
     r = sess.send (
+        meta = "cdir",
         type = "glsl_window",
         path = "heap://main/glsl",
         echo = "window_finished event to %s" % id(sess),
@@ -318,36 +321,20 @@ if __name__=='__main__':
     )
     pp(r)
 
-#    pp( sess.get_interface()                 )
-#    pp( sess.get_interface(["arg0","arg2"] ) )
-#    pp( sess.get_variables()                 )
-#    pp( sess.dir()                           )
-#    pp( sess.dir( ["arg0","arg2"])           )
-#    pp( sess.cd("hello/world")               )
-
-    #sess.exec()
     pp([i for i in dir(sess.serv) if not re.match("^__.*__$",i)])
     sess.serv.ls()
-    # sess.query_reconnect_data()
-    # sess.disconnect()
-    # sess.reconnect()
 
 # SET => Call Interface's slot "set(QJsonObject,QJsonObject&)"
-    r = sess.send (
-        meta = 'set', 
-        args = dict (
-            path = "heap://tests/test_um4f",
-        )
-    )
+    r = sess.send ( meta = 'cset', args = dict ( path = "heap://tests/test_um4f" ) )
     pp(r)
 
 # DIR => Call Session's or Interface's slot "dir(QJsonObject,QJsonObject&)"
-    r = sess.send ( meta = 'dir', args = dict ( path = "heap://tests/test_um4f" ) )
+    r = sess.send ( meta = 'cdir', args = dict ( path = "heap://tests/test_um4f" ) )
     pp(r)
 
 # GET => Call Session's or Interface's slot "get(QJsonObject,QJsonObject&)"
 
-    query_template = dict( meta = 'get', args = dict ( path = "" ))
+    query_template = dict( meta = 'cget', args = dict ( path = "" ))
 
     query_targets = [
         "heap://tests/test_qstr" , "heap://tests/test_bool" ,
@@ -363,7 +350,7 @@ if __name__=='__main__':
         r = sess.send( **query )
         print("\n---TEST--" + path + "----")
         pp(query)
-        print("GX %s:%s >>>" % (sess.host,sess.port) )
+        print(">>> %s:%s echo:" % (sess.host,sess.port) )
         pp(r)
 
 # VARS, EDIT, HREF, WREF, SELF
@@ -371,9 +358,21 @@ if __name__=='__main__':
 #   depended from Interface's instance life time and self own life time based
 #   on VARS records:
 #     EDIT(name, path) => open to edit node's value (new/del/replace)
+    r = sess.send ( meta = 'edit', args = dict ( name = "edit0", path = "heap://tests/test_edit0" ) )
+    pp(r)
+
 #     HREF(name, path) => hard ref to shared object w/o some edit abilities
+    r = sess.send ( meta = 'href', args = dict ( name = "href0", path = "heap://tests/test_href0" ) )
+    pp(r)
+
 #     WREF(name, path) => weak ref to shared object w/o some edit abilities
+    r = sess.send ( meta = 'wref', args = dict ( name = "wref0", path = "heap://tests/test_wref0" ) )
+    pp(r)
+
 #     SELF(name)       => hard ref to not-shared self variable with full edit abilities set
+    r = sess.send ( meta = 'self', args = dict ( name = "self0", path = "heap://tests/test_self0" ) )
+    pp(r)
+
 
 # VAR => Call Interface's Variable's Slot "get(QJsonObject,QJsonObject&)"
     # r = sess.send (

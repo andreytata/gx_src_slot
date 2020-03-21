@@ -132,7 +132,6 @@ void Session::on_remote_string(QString message)
 
                 if( QJsonParseError::NoError != parse_error.error )
                 {
-
                     last_error = parse_error.errorString();   // qDebug() << "  <<SESS>> input text message are not JSON" << last_error;
 
                     output["fail"] = QString("SESS: text input not JSON") + last_error;
@@ -185,7 +184,7 @@ void Session::on_remote_string(QString message)
 
                 qDebug() << "META NAME IS " << meta_name;
 
-                std::map<std::string, std::pair<QMetaMethod, QObject*> >::iterator
+                std::map<std::string, std::pair<QMetaMethod, QObject*> >::iterator                        
                         method_iter = mm_interface.find(meta_name.toStdString());
 
                 if( method_iter == mm_interface.end() )
@@ -205,26 +204,9 @@ void Session::on_remote_string(QString message)
 
                 qDebug() << "  SESS PREPARE CALL" << method.methodSignature() << object;
 
-                /* Deprecated, because re-scanned only methods ends with ?(QJsonObject,QJsonObject&)
-                if(!method.methodSignature().endsWith("(QJsonObject,QJsonObject&)"))
-                {
-                    output["fail"]
-                            = QString( QString("SESS: slot type error ")
-                            + QString(method.methodSignature())).simplified();
-
-                    QJsonDocument echo(output);
-
-                    mp_socket->sendTextMessage( echo.toJson() );
-
-                    return;
-                }
-                */
-
-                method.invoke (
-                            object, Qt::DirectConnection,
-                            Q_ARG(const QJsonObject&, input  ),
-                            Q_ARG(      QJsonObject&, output )
-                        );
+                method.invoke( object, Qt::DirectConnection,
+                               Q_ARG(const QJsonObject&, input  ),
+                               Q_ARG(      QJsonObject&, output ));
 
                 qDebug() << doc;
 
@@ -237,8 +219,6 @@ void Session::on_remote_string(QString message)
                 QJsonDocument echo(output);
 
                 mp_socket->sendTextMessage( echo.toJson() );
-
-                // mp_socket->sendTextMessage(JSON({"fail":"not implemrnted protocol_02"}));
             }
         }
         else

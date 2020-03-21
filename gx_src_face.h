@@ -9,25 +9,101 @@
 #include <QtCore/QMetaMethod>
 #include <QtCore/QList>
 #include <QtCore/QByteArray>
+#include <QJsonObject>
 #include <QWebSocket>
+#include <QDebug>
 
 
 namespace gx
 {
     struct slot;
 
-    struct attr
+
+    class attr: public QObject
     {
-        attr(const std::shared_ptr<gx::slot>&sp)
-            :sp_slot(sp)
-            ,wp_slot(sp)
-        {}
-        attr(const attr& src)
-            :sp_slot(src.sp_slot)
-            ,wp_slot(src.sp_slot)
-        {}
+        Q_OBJECT
+
+    public:
+        attr(QObject* parent):QObject(parent)
+        {
+
+        }
+
+        virtual ~attr()
+        {
+
+        }
+
+        virtual void eval(const QString&, const QJsonObject&, QJsonObject&) = 0;
+    };
+
+    /// is only call methods proxy with ability evaluate metamethods with
+    /// signatures regexp match "^edit_(.*)\(QJsonObject,QJsonObject&\)$"
+    /// for shared slot object's controller instance. Any shared slot has
+    /// only one edit object in some time.
+    class edit: public attr
+    {
+        Q_OBJECT
+
+        std::shared_ptr <gx::slot> sp_slot = nullptr;
+
+    public:
+        edit(QObject*parent = nullptr);
+
+        virtual ~edit();
+
+        void eval(const QString&, const QJsonObject&, QJsonObject&);
+
+        const char* set_path(const QString& path);
+
+    public slots:
+        void set(const QJsonObject&, QJsonObject&){ qDebug()<<"edit::set()"; }
+        void get(const QJsonObject&, QJsonObject&){ qDebug()<<"edit::get()"; }
+        void set_path(const QJsonObject&, QJsonObject&);
+    };
+
+    class href: public attr
+    {
+        Q_OBJECT
+
+    public:
         std::shared_ptr <gx::slot> sp_slot;
+
+        void eval(const QString&, const QJsonObject&, QJsonObject&);
+
+    public slots:
+        void set(const QJsonObject&, QJsonObject&){ qDebug()<<"href::set()"; }
+        void get(const QJsonObject&, QJsonObject&){ qDebug()<<"href::get()"; }
+
+    };
+
+    class wref: public attr
+    {
+        Q_OBJECT
+
+    public:
         std::weak_ptr   <gx::slot> wp_slot;
+
+        void eval(const QString&, const QJsonObject&, QJsonObject&);
+
+    public slots:
+        void del(){}
+        void del(const QJsonObject&, QJsonObject&){}
+        void set(const QJsonObject&, QJsonObject&){ qDebug()<<"wref::set()"; }
+        void get(const QJsonObject&, QJsonObject&){ qDebug()<<"wref::get()"; }
+    };
+
+    class self: public attr
+    {
+        Q_OBJECT
+
+    public:
+
+        void eval(const QString&, const QJsonObject&, QJsonObject&);
+
+    public slots:
+        void set(const QJsonObject&, QJsonObject&){ qDebug()<<"self::set()"; }
+        void get(const QJsonObject&, QJsonObject&){ qDebug()<<"self::get()"; }
     };
 }
 
@@ -98,6 +174,8 @@ public Q_SLOTS:
 
     void self(const QJsonObject& input , QJsonObject& output);
 
+    void vars(const QJsonObject& input , QJsonObject& output);
+
     void on_remote_opened(QWebSocket* socket);
 
     void on_remote_string(QString message, QWebSocket* socket);
@@ -147,7 +225,7 @@ private:
     bool debug;
 
     // variables, is weakref or hardref objects stored at this gxvm side
-    std::map<std::string, gx::attr> vars;
+    std::map<std::string, gx::attr*> __vars;
 
     // interface extentions set
     std::map<std::string, QObject*> mm_self_interfaces;  // interface name => invocated QObject

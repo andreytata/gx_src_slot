@@ -356,23 +356,85 @@ if __name__=='__main__':
 # VARS, EDIT, HREF, WREF, SELF
 #     Interface's variables stored in Interface's dict VARS and has life-time
 #   depended from Interface's instance life time and self own life time based
-#   on VARS records:
-#     EDIT(name, path) => open to edit node's value (new/del/replace)
-    r = sess.send ( meta = 'edit', args = dict ( name = "edit0", path = "heap://tests/test_edit0" ) )
-    pp(r)
+#   on VARS records: Each 'vars' record is methamethods proxy and href/weakref
+#   pointer to slot. Each method of 'edit' proxy has access to slot controller
+#   instance with prefix edit_, so 'show' method sended to edit proxy send args
+#   to controller's method 'edit_show', so href proxy call 'href_show' instead,
+#   etc.
 
-#     HREF(name, path) => hard ref to shared object w/o some edit abilities
+#  new HREF(name, path) => hard ref to shared object w/o some edit abilities
     r = sess.send ( meta = 'href', args = dict ( name = "href0", path = "heap://tests/test_href0" ) )
     pp(r)
 
-#     WREF(name, path) => weak ref to shared object w/o some edit abilities
+#  new WREF(name, path) => weak ref to shared object w/o some edit abilities
     r = sess.send ( meta = 'wref', args = dict ( name = "wref0", path = "heap://tests/test_wref0" ) )
     pp(r)
 
-#     SELF(name)       => hard ref to not-shared self variable with full edit abilities set
+#  new SELF(name)       => hard ref to not-shared self variable with full edit abilities set
     r = sess.send ( meta = 'self', args = dict ( name = "self0", path = "heap://tests/test_self0" ) )
     pp(r)
 
+    # create new edit-object-variable
+    print( """\nnew EDIT(name, path) => open to edit node's value (new/del/replace)""")
+    r = sess.send (
+        meta = 'edit',
+        args =  dict (
+            name = "edit0",
+            path = "heap://tests/test_edit0",
+        )
+    )
+    pp(r)
+
+    print( """\nnew EDIT(name, path) =>  # ERROR, edit0 alredy exists""")
+    r = sess.send (
+        meta = 'edit',
+        args =  dict (
+            name = "edit0",  
+            path = "heap://tests/test_edit0",
+        )
+    )
+    pp(r)
+
+    # OPEN path to edit 
+    print("\nVARS => # call vars[%%var_name%%].%%method_name%%(QJsonObject,QJsonObject&)")
+    r = sess.send (
+        meta = 'vars',
+        args =  dict (
+            name = "edit0",       # call vars["edit0"].set_path("heap://tests/test_edit0")
+            proc = "set_path",
+            path = "heap://tests/test_edit0",
+        )
+    )
+    pp(r)
+
+    sys.exit() ## !!! TODO: cpp core insert set path implementation
+
+    print("\nVARS => # ERROR: has no variable named %%name%%")
+    r = sess.send (
+        meta = 'vars',
+        args =  dict (
+            name = "edittt",       # call vars["edit0"].set_path("heap://tests/test_edit0")
+            proc = "set_path",
+            path = "heap://tests/test_edit0",
+        )
+    )
+    pp(r)
+
+    print("\nVARS => # CALL DLC dynamicaly connected shared object's %%name%% method %%proc%%")
+    r = sess.send (
+        meta = 'vars',
+        args =  dict (
+            name = "edit0",                         # call from var "edit0"
+            proc = "pare_to_draw",                  # method "pare_to_draw"
+            path = "heap://scene/test_scene_root",  # method use argument "path" as string
+        )
+    )
+    pp(r)
+
+# HREF (name, path) create some hard reference to slot at specified path, and store created
+# in Interface vars[name] dictionary. Is prevent shared slot object from deletion. And make
+# access to slot's controller methamethods with name started from "href_". Controllers meta
+# methods are expert Is only
 
 # VAR => Call Interface's Variable's Slot "get(QJsonObject,QJsonObject&)"
     # r = sess.send (

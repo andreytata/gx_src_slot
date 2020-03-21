@@ -273,8 +273,34 @@ void gx::slot::on_free() noexcept
 }
 
 
-gx::slot::mode* gx::root::slot_mode(const char* ) noexcept
+gx::slot::mode* gx::root::slot_mode(const char* path) noexcept
 {
+    uint hash = gx::root::hash(path);
+
+    auto exists = gx::root::globals().find(hash);
+
+    if( gx::root::globals().end() == exists )
+    {
+        return gx::slot::mode_none();
+    }
+
+    std::weak_ptr<gx::slot> wp_slot = exists->second;
+
+    qDebug() << wp_slot.use_count();
+
+//    gx::slot* p_slot = new gx::slot();
+
+//    p_slot->path = path;
+
+//    p_slot->hash = hash;
+
+//    auto sp_new = std::shared_ptr<gx::slot>( p_slot, gx::root::slot_free );
+
+//    gx::root::globals()[hash] = sp_new;
+
+//    return sp_new;
+
+
     return gx::slot::mode_none();
 }
 

@@ -55,11 +55,233 @@ void Interface::cget(const QJsonObject& i, QJsonObject& o)
 }
 
 
-// allocate new slot editor ('path' editor) variable
+void Interface::vars(const QJsonObject& input , QJsonObject& output)
+{
+    QJsonValue args_val = input["args"];
+
+    if( args_val.isUndefined() )
+    {
+        output["fail"] = "Interface::edit field 'args' undefined";
+
+        output["echo"] = input;
+
+        return;
+
+    }
+
+    if( ! args_val.isObject() )
+    {
+        output["fail"] = "Interface::edit field 'args' not dict object";
+
+        output["echo"] = input;
+
+        return;
+    }
+
+    QJsonObject args = args_val.toObject();
+
+    QJsonValue proc_val = args["proc"];
+
+    if( proc_val.isUndefined() )
+    {
+        output["fail"] = "Interface::vars field 'proc' undefined";
+
+        output["echo"] = input;
+
+        return;
+
+    }
+
+    if( ! proc_val.isString() )
+    {
+        output["fail"] = "Interface::vars field 'proc' not string";
+
+        output["echo"] = input;
+
+        return;
+    }
+
+    QJsonValue name_val = args["name"];
+
+    if( name_val.isUndefined() )
+    {
+        output["fail"] = "Interface::vars field 'name' undefined";
+
+        output["echo"] = input;
+
+        return;
+
+    }
+
+    if( ! name_val.isString() )
+    {
+        output["fail"] = "Interface::vars field 'name' not string";
+
+        output["echo"] = input;
+
+        return;
+    }
+
+    QString name = name_val.toString();
+
+    QString proc = proc_val.toString();
+
+    qDebug() << "Inerface::vars try to call vars[" << name << "].proc =" << proc;
+
+    output["fail"] = "Interface::vars TODO: IMPLEMENT 'Interface::vars' META METHOD";
+
+    gx::attr* pvar = __vars[name.toStdString()];
+
+    if( nullptr == pvar )
+    {
+        output["fail"] = "Interface::vars has no variable named '" + name + "'";
+
+        output["echo"] = input;
+
+        return;
+    }
+
+    QString meta_method_name = proc + "(QJsonObject,QJsonObject&)";
+
+    int meta_method_index = pvar->metaObject()->indexOfMethod(meta_method_name.toLatin1().data());
+
+    if( meta_method_index < 0 )
+    {
+        // if metha method not exists in variable, execution delegated to gx::attr::eval
+        pvar->eval(meta_method_name, input, output);
+
+        return;
+    }
+
+    QMetaMethod meta_method = pvar->metaObject()->method(meta_method_index);
+
+    meta_method.invoke( pvar, Qt::DirectConnection,
+                        Q_ARG(const QJsonObject&, input  ),
+                        Q_ARG(      QJsonObject&, output ));
+
+    QJsonObject back;
+
+    back["attr"] = "0x" + QString::number( uint(pvar), 16 );
+
+    back["name"] = name;
+
+    back["proc"] = proc;
+
+    output["args"] = back;
+
+    output["echo"] = input;
+
+    return;
+}
+
+// allocate new slot editor ('path' editor) variable. Create named variable.
+// is edit decorator to exists or not exists yet slot or variable
 void Interface::edit(const QJsonObject& input , QJsonObject& output)
 {
-    output["fail"] = "Interface::edit TODO: NOT IMPLEMENTED METHOD YET";
-    output["echo"] = input;
+    QJsonValue args_val = input["args"];
+
+    if( args_val.isUndefined() )
+    {
+        output["fail"] = "Interface::edit field 'args' undefined";
+
+        output["echo"] = input;
+
+        return;
+
+    }
+
+    if( ! args_val.isObject() )
+    {
+        output["fail"] = "Interface::edit field 'args' not dict object";
+
+        output["echo"] = input;
+
+        return;
+    }
+
+    QJsonObject args = args_val.toObject();
+
+    QJsonValue name_val = args["name"];
+
+    if( name_val.isUndefined() )
+    {
+        output["fail"] = "Interface::edit field 'name' undefined";
+
+        output["echo"] = input;
+
+        return;
+
+    }
+
+    if( ! name_val.isString() )
+    {
+        output["fail"] = "Interface::edit field 'name' not string";
+
+        output["echo"] = input;
+
+        return;
+    }
+
+    QJsonValue path_val = args["path"];
+
+    if( path_val.isUndefined() )
+    {
+        output["fail"] = "Interface::edit field 'path' undefined";
+
+        output["echo"] = input;
+
+        return;
+
+    }
+
+    if( ! path_val.isString() )
+    {
+        output["fail"] = "Interface::edit field 'path' not string";
+
+        output["echo"] = input;
+
+        return;
+    }
+
+    QString name = name_val.toString();
+
+    QString path = path_val.toString();
+
+    qDebug() << "Inerface::edit try to create variable with name" << name;
+
+    std::map<std::string, gx::attr*>::iterator exists_iter = __vars.find( name.toStdString() );
+
+    if( __vars.end() != exists_iter )
+    {
+        output["fail"] = "Interface::edit target 'name' already exists in vars";
+
+        output["echo"] = input;
+
+        return;
+    }
+
+    // Allocate new EDIT is VARS. After allocation "vars" JSON form can be used for invocate
+    // created variable's methods:
+    // {"meta":"vars", "args":{"name":"...", "meth":"...", "args":{...} } }
+    //
+    gx::edit* p_edit = new gx::edit(this);  // delete interface instance is delete all VARS
+
+    __vars[name.toStdString()] = p_edit;
+
+    QJsonObject echo_args;
+
+    echo_args["meth"] = "vars contain new instance of edit";
+
+    echo_args["name"] = name;
+
+    echo_args["path"] = path;
+
+    echo_args["mode"] = "success";
+
+    echo_args["edit"] = "0x" + QString::number( uint( (void*) p_edit ), 16);
+
+    output["echo"] = echo_args;
+
     return;
 }
 
@@ -85,4 +307,31 @@ void Interface::self(const QJsonObject& input , QJsonObject& output)
     output["fail"] = "Interface::self TODO: NOT IMPLEMENTED METHOD YET";
     output["echo"] = input;
     return;
+}
+
+void gx::href::eval( const QString& meth, const QJsonObject & input, QJsonObject & output )
+{
+    output["fail"] = "gx::href::eval TODO: NOT IMPLEMENTED YET";
+
+    output["echo"] = input;
+
+    output["gx::href::eval"] = meth;
+}
+
+void gx::wref::eval( const QString& meth, const QJsonObject & input, QJsonObject & output )
+{
+    output["fail"] = "gx::wref::eval TODO: NOT IMPLEMENTED YET";
+
+    output["echo"] = input;
+
+    output["gx::wref::eval"] = meth;
+}
+
+void gx::self::eval( const QString& meth, const QJsonObject & input, QJsonObject & output )
+{
+    output["fail"] = "gx::self::eval TODO: NOT IMPLEMENTED YET";
+
+    output["echo"] = input;
+
+    output["gx::self::eval"] = meth;
 }

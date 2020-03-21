@@ -326,6 +326,10 @@ public:
 
     std::shared_ptr<gx::node> sp_node;  // Must be initialized by sp_type before slot's mode switched to mode_main.
                                         // Each class derived from gx::node, can contain 0..N gx::slot::href values.
+
+    void* mp_edit = nullptr;            // Hidden lock edit field ( only one edit priveleges variable in some time )
+
+    void* mp_ctrl = nullptr;            // Hidden lock controller field ( only one controller for node in some time )
 };
 
 /// ROOT struct

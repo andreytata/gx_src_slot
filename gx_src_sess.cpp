@@ -159,7 +159,7 @@ void Interface::set(QJsonObject& echo, const QString& name, const QString& type,
             p_echo->insert("fail", "not implemented SET gx::slot::mode::init");
 
 
-            p_gxvm->vars.insert({std::string(ba_name.data()), gx::attr(sp_slot)});  // store created variable in dict
+            //p_gxvm->vars.insert({std::string(ba_name.data()), gx::attr(sp_slot)});  // store created variable in dict
         }
 
         void on(gx::slot::mode::main*)
